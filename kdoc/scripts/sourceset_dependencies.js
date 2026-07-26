@@ -1,0 +1,1 @@
+sourceset_dependencies = '{":klibhn/appleMain":[":klibhn/nativeMain"],":klibhn/commonMain":[],":klibhn/jvmMain":[":klibhn/commonMain"],":klibhn/macosArm64Main":[":klibhn/macosMain"],":klibhn/macosMain":[":klibhn/appleMain"],":klibhn/nativeMain":[":klibhn/commonMain"]}'
