@@ -131,14 +131,15 @@ fun main(av: Array<String>) {
               Row(
                 modifier = Modifier.fillMaxWidth(),
               ) {
-                val url = story.urlAbbreviated?.let { " $it" } ?: ""
-                val indexStr = "${story.index} "
-                val title = story.title.abbreviate(screenWidth - indexStr.length - url.length)
+                val url = story.urlAbbreviated?: ""
+                val indexStr = "${story.index + 1}"
+                val title = " " +story.title.abbreviate(screenWidth - indexStr.length - url.length - 2) + " "
+                val isFocused = state.focusedIndex == story.index
                 Text(
                   value = buildAnnotatedString {
                     withStyle(
                       SpanStyle(
-                        textStyle = if (state.focusedIndex == story.index) {
+                        textStyle = if (isFocused) {
                           TextStyle.Invert
                         } else {
                           TextStyle.Unspecified
@@ -149,7 +150,7 @@ fun main(av: Array<String>) {
                         append(indexStr)
                       }
                       append(title)
-                      withStyle(SpanStyle(color = Color.Red)) {
+                      withStyle(SpanStyle(textStyle = TextStyle.Dim + if (isFocused) TextStyle.Invert else TextStyle.Unspecified)) {
                         append(url)
                       }
                       val padding = screenWidth - indexStr.length - title.length - url.length
