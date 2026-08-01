@@ -26,6 +26,9 @@
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -100,30 +103,42 @@ fun main(av: Array<String>) {
         }
 
         is MainViewModel.State.Content -> {
+          var windowIndex by remember { mutableStateOf(0) }
           Column(
             modifier = Modifier
               .fillMaxSize()
               .onKeyEvent { keyEvent ->
                 when (keyEvent) {
-                  ArrowUp -> viewModel.focusUp()
-                  ArrowDown -> viewModel.focusDown()
+                  ArrowUp -> {
+                    val focusIndexChanged = viewModel.focusUp()
+                    if (focusIndexChanged && (state.focusedIndex - 1).coerceAtLeast(0) < windowIndex) {
+                      windowIndex--
+                    }
+                  }
+                  ArrowDown -> {
+                    val focusIndexChanged = viewModel.focusDown()
+                    if (focusIndexChanged && state.focusedIndex + 1 >= windowIndex + screenHeight) {
+                      windowIndex++
+                    }
+                  }
+
                   else -> return@onKeyEvent false
                 }
                 true
               },
           ) {
-            for ((index, story) in state.content.take(screenHeight).withIndex()) {
+            for (story in state.content.drop(windowIndex).take(screenHeight)) {
               Row(
                 modifier = Modifier.fillMaxWidth(),
               ) {
                 val url = story.urlAbbreviated?.let { " $it" } ?: ""
-                val indexStr = "$index "
+                val indexStr = "${story.index} "
                 val title = story.title.abbreviate(screenWidth - indexStr.length - url.length)
                 Text(
                   value = buildAnnotatedString {
                     withStyle(
                       SpanStyle(
-                        textStyle = if (state.focusedIndex == index) {
+                        textStyle = if (state.focusedIndex == story.index) {
                           TextStyle.Invert
                         } else {
                           TextStyle.Unspecified

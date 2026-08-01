@@ -31,14 +31,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import org.jraf.klibhn.client.HnClient
+import org.jraf.klibhn.model.Story
 
 class MainViewModel : ViewModel(
   // The default scope uses Dispatchers.Main.immediate, which is not available by default.
@@ -55,6 +56,7 @@ class MainViewModel : ViewModel(
   }
 
   data class UiStoryOverview(
+    val index: Int,
     val title: String,
     val urlAbbreviated: String?,
   )
@@ -72,34 +74,40 @@ class MainViewModel : ViewModel(
   private val requestedStoryCount = MutableStateFlow<Int?>(null)
   private val focusedIndex = MutableStateFlow(0)
 
-  val state: StateFlow<State> = requestedStoryCount.flatMapLatest { requestedStoryCount ->
-    flow {
-      emit(State.Loading)
-      if ((requestedStoryCount == null)) {
-        return@flow
-      }
-      val bestStoryIds = hnClient.getBestStoryIds().getOrElse {
-        emit(State.Error(it))
-        return@flow
-      }
-      val bestStories = hnClient.getStoryOverviews(bestStoryIds.take(requestedStoryCount)).getOrElse {
-        emit(State.Error(it))
-        return@flow
-      }
-      val uiStories = bestStories.map { story ->
-        UiStoryOverview(
-          title = story.title,
-          urlAbbreviated = story.url?.abbreviatedUrl(),
-        )
-      }
-      emit(State.Content(uiStories, 0))
+  private var storyIdsCount = 0
+  private val storyIds: Flow<Result<List<Story.Id>>> = flow {
+    emit(
+      hnClient.getBestStoryIds().also {
+        storyIdsCount = it.getOrNull()?.size ?: 0
+      },
+    )
+  }
+
+  private var storyOverViews = emptyList<Story.Overview>()
+
+  val state: StateFlow<State> = combine(storyIds, requestedStoryCount, focusedIndex) { storyIds, requestedStoryCount, focusedIndex ->
+    if (requestedStoryCount == null) {
+      return@combine State.Loading
     }
-  }.combine(focusedIndex) { state, focusedIndex ->
-    when (state) {
-      is State.Loading -> state
-      is State.Error -> state
-      is State.Content -> state.copy(focusedIndex = focusedIndex)
+    val storyIds = storyIds.getOrElse {
+      return@combine State.Error(it)
     }
+    val storyIdsToLoad = storyIds.take(requestedStoryCount).drop(storyOverViews.size)
+    if (storyIdsToLoad.isNotEmpty()) {
+      val storyOverviewsPage = hnClient.getStoryOverviews(storyIdsToLoad).getOrElse {
+        return@combine State.Error(it)
+      }
+      this.storyOverViews += storyOverviewsPage
+    }
+
+    val uiStories = this.storyOverViews.mapIndexed { index, overview ->
+      UiStoryOverview(
+        index = index,
+        title = overview.title,
+        urlAbbreviated = overview.url?.abbreviatedUrl(),
+      )
+    }
+    State.Content(uiStories, focusedIndex)
   }.stateIn(
     scope = viewModelScope,
     started = SharingStarted.WhileSubscribed(),
@@ -115,15 +123,23 @@ class MainViewModel : ViewModel(
     }
   }
 
-  fun focusUp() {
-    if (state.value !is State.Content) return
-    focusedIndex.value = (focusedIndex.value - 1).coerceAtLeast(0)
+  fun focusUp(): Boolean {
+    if (state.value !is State.Content) return false
+    val newFocusedIndex = focusedIndex.value - 1
+    if (newFocusedIndex < 0) return false
+    focusedIndex.value = newFocusedIndex
+    return true
   }
 
-  fun focusDown() {
-    val state = state.value
-    if (state !is State.Content) return
-    focusedIndex.value = (focusedIndex.value + 1).coerceAtMost(state.content.lastIndex)
+  fun focusDown(): Boolean {
+    if (state.value !is State.Content) return false
+    val newFocusIndex = focusedIndex.value + 1
+    if (newFocusIndex > storyIdsCount - 1) return false
+    if (newFocusIndex >= (requestedStoryCount.value ?: 0)) {
+      requestStoryCount(newFocusIndex + 1)
+    }
+    focusedIndex.value = newFocusIndex
+    return true
   }
 }
 
