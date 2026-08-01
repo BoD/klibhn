@@ -28,7 +28,7 @@ package org.jraf.klibhn.internal.json
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class JsonComment(
+internal data class JsonComment(
   val author: String,
   val children: List<JsonComment>,
   val created_at_i: Long,

@@ -29,9 +29,6 @@ kotlin {
 
     jvmMain {
       dependencies {
-        // Coroutines
-        implementation(libs.kotlinx.coroutines.jdk9)
-
         // Ktor OkHttp
         implementation(libs.ktor.client.okhttp)
       }

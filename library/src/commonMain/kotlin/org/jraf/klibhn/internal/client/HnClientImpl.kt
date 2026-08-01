@@ -36,11 +36,15 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.URLBuilder
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
 import org.jraf.klibhn.client.HnClient
 import org.jraf.klibhn.client.HnClient.Configuration.Http.HttpLoggingLevel
 import org.jraf.klibhn.internal.json.JsonComment
-import org.jraf.klibhn.internal.json.JsonStory
+import org.jraf.klibhn.internal.json.JsonStoryOverview
+import org.jraf.klibhn.internal.json.JsonStoryWithComments
 import org.jraf.klibhn.model.Comment
 import org.jraf.klibhn.model.Story
 import org.jraf.klibnanolog.logd
@@ -101,13 +105,26 @@ internal class HnClientImpl(
     }
   }
 
-  override suspend fun getBestStoryIds(): List<Long> {
-    return service.getBestStoryIds()
+  override suspend fun getBestStoryIds(): Result<List<Story.Id>> = runCatching {
+    service.getBestStoryIds().map { Story.Id(it) }
   }
 
-  override suspend fun getStory(id: Long): Story {
-    val jsonStory = service.getStory(id)
-    return jsonStory.toStory()
+  override suspend fun getStoryOverView(id: Story.Id): Result<Story.Overview> = runCatching {
+    service.getStoryOverview(id.id).toStoryOverview()
+  }
+
+  override suspend fun getStoryOverviews(ids: List<Story.Id>): Result<List<Story.Overview>> = runCatching {
+    coroutineScope {
+      ids
+        .map { storyId ->
+          async { getStoryOverView(storyId).getOrThrow() }
+        }
+        .awaitAll()
+    }
+  }
+
+  override suspend fun getStoryWithComments(id: Story.Id): Result<Story.WithComments> = runCatching {
+    service.getStoryWithComments(id.id).toStory()
   }
 
   override fun close() {
@@ -115,8 +132,19 @@ internal class HnClientImpl(
   }
 }
 
-private fun JsonStory.toStory() = Story(
-  id = id,
+private fun JsonStoryOverview.toStoryOverview() = Story.Overview(
+  id = Story.Id(id),
+  creationDate = Instant.fromEpochMilliseconds(time * 1000),
+  title = title,
+  author = by,
+  score = score,
+  text = text,
+  url = url,
+  commentCount = descendants,
+)
+
+private fun JsonStoryWithComments.toStory() = Story.WithComments(
+  id = Story.Id(id),
   creationDate = Instant.fromEpochMilliseconds(created_at_i * 1000),
   title = title,
   author = author,
@@ -129,7 +157,7 @@ private fun JsonStory.toStory() = Story(
 )
 
 private fun JsonComment.toComment(): Comment = Comment(
-  id = id,
+  id = Comment.Id(id),
   creationDate = Instant.fromEpochMilliseconds(created_at_i * 1000),
   author = author,
   text = text,

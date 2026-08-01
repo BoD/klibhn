@@ -28,13 +28,14 @@ package org.jraf.klibhn.internal.client
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
-import org.jraf.klibhn.internal.json.JsonStory
+import org.jraf.klibhn.internal.json.JsonStoryWithComments
+import org.jraf.klibhn.internal.json.JsonStoryOverview
 
 internal class HnService(
   private val httpClient: HttpClient,
 ) : AutoCloseable {
   private companion object {
-    const val URL_BASE_FIREBASE = "https://hacker-news.firebaseio.com/v0/"
+    const val URL_BASE_FIREBASE = "https://hacker-news.firebaseio.com/v0"
     const val URL_BASE_ALGOLIA = "https://hn.algolia.com/api/v1"
   }
 
@@ -42,7 +43,11 @@ internal class HnService(
     return httpClient.get("$URL_BASE_FIREBASE/beststories.json").body()
   }
 
-  suspend fun getStory(id: Long): JsonStory {
+  suspend fun getStoryOverview(id: Long): JsonStoryOverview {
+    return httpClient.get("$URL_BASE_FIREBASE/item/$id.json").body()
+  }
+
+  suspend fun getStoryWithComments(id: Long): JsonStoryWithComments {
     return httpClient.get("$URL_BASE_ALGOLIA/items/$id").body()
   }
 

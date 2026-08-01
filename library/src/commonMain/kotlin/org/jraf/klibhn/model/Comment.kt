@@ -25,14 +25,20 @@
 
 package org.jraf.klibhn.model
 
+import kotlin.jvm.JvmInline
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 @OptIn(ExperimentalTime::class)
 data class Comment(
-  val id: Long,
+  val id: Id,
   val creationDate: Instant,
   val author: String,
   val text: String,
   val comments: List<Comment>,
-)
+) {
+  @JvmInline
+  value class Id(
+    internal val id: Long,
+  )
+}

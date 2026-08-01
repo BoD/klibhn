@@ -28,13 +28,13 @@ package org.jraf.klibhn.internal.json
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class JsonStory(
-  val author: String,
-  val children: List<JsonComment>,
-  val created_at_i: Long,
+internal data class JsonStoryOverview(
+  val by: String,
+  val descendants: Int,
   val id: Long,
-  val points: Int,
-  val text: String,
+  val score: Int,
+  val text: String? = null,
+  val time: Long,
   val title: String,
-  val url: String,
+  val url: String? = null,
 )

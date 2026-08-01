@@ -28,12 +28,7 @@ package org.jraf.klibhn.client
 import org.jraf.klibhn.internal.client.HnClientImpl
 import org.jraf.klibhn.model.Story
 
-interface HnClient: AutoCloseable {
-  suspend fun getBestStoryIds(): List<Long>
-
-  suspend fun getStory(id: Long): Story
-
-
+interface HnClient : AutoCloseable {
   class Configuration(
     val http: Http = Http(),
   ) {
@@ -58,6 +53,14 @@ interface HnClient: AutoCloseable {
       }
     }
   }
+
+  suspend fun getBestStoryIds(): Result<List<Story.Id>>
+
+  suspend fun getStoryOverView(id: Story.Id): Result<Story.Overview>
+
+  suspend fun getStoryOverviews(ids: List<Story.Id>): Result<List<Story.Overview>>
+
+  suspend fun getStoryWithComments(id: Story.Id): Result<Story.WithComments>
 }
 
 fun HnClient(

@@ -27,16 +27,43 @@
 
 package org.jraf.klibhn.model
 
+import kotlin.jvm.JvmInline
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-data class Story(
-  val id: Long,
-  val creationDate: Instant,
-  val title: String,
-  val author: String,
-  val score: Int,
-  val text: String,
-  val url: String,
-  val comments: List<Comment>,
-)
+sealed interface Story {
+  val id: Id
+  val creationDate: Instant
+  val title: String
+  val author: String
+  val score: Int
+  val text: String?
+  val url: String?
+
+  data class Overview(
+    override val id: Id,
+    override val creationDate: Instant,
+    override val title: String,
+    override val author: String,
+    override val score: Int,
+    override val text: String?,
+    override val url: String?,
+    val commentCount: Int,
+  ) : Story
+
+  data class WithComments(
+    override val id: Id,
+    override val creationDate: Instant,
+    override val title: String,
+    override val author: String,
+    override val score: Int,
+    override val text: String?,
+    override val url: String?,
+    val comments: List<Comment>
+  ) : Story
+
+  @JvmInline
+  value class Id(
+    internal val id: Long,
+  )
+}

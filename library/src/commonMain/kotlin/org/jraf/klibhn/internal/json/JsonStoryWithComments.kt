@@ -23,22 +23,18 @@
  * limitations under the License.
  */
 
-import org.jraf.klibhn.client.HnClient
-import org.jraf.klibhn.client.HnClient.Configuration
-import org.jraf.klibhn.client.HnClient.Configuration.Http
-import org.jraf.klibhn.client.HnClient.Configuration.Http.HttpLoggingLevel
-import org.jraf.klibnanolog.logd
+package org.jraf.klibhn.internal.json
 
-suspend fun main(av: Array<String>) {
-  HnClient(
-    Configuration(
-      Http(
-        loggingLevel = HttpLoggingLevel.ALL,
-      ),
-    ),
-  ).use { client ->
-    val bestStoryIds = client.getBestStoryIds()
-    logd(bestStoryIds)
-    logd(client.getStory(bestStoryIds.first()))
-  }
-}
+import kotlinx.serialization.Serializable
+
+@Serializable
+internal data class JsonStoryWithComments(
+  val author: String,
+  val children: List<JsonComment>,
+  val created_at_i: Long,
+  val id: Long,
+  val points: Int,
+  val text: String?,
+  val title: String,
+  val url: String?,
+)
