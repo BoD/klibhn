@@ -30,24 +30,34 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import org.jraf.klibhn.client.HnClient
-import org.jraf.klibhn.model.Story
-import org.jraf.klibnanolog.logd
 
-class MainViewModel: ViewModel() {
+class MainViewModel : ViewModel(
+  // The default scope uses Dispatchers.Main.immediate, which is not available by default.
+  // Use Dispatchers.Default instead.
+  viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+) {
   sealed interface State {
     object Loading : State
     data class Error(val throwable: Throwable) : State
-    data class Content(val content: List<Story.Overview>) : State
+    data class Content(
+      val content: List<UiStoryOverview>,
+      val focusedIndex: Int,
+    ) : State
   }
 
-  private val viewModelScope2 = CoroutineScope(Dispatchers.Default)
+  data class UiStoryOverview(
+    val title: String,
+    val urlAbbreviated: String?,
+  )
 
   private val hnClient by lazy {
     HnClient(
@@ -59,23 +69,36 @@ class MainViewModel: ViewModel() {
     )
   }
 
-  private val screenHeight = MutableStateFlow<Int?>(null)
+  private val requestedStoryCount = MutableStateFlow<Int?>(null)
+  private val focusedIndex = MutableStateFlow(0)
 
-  val state: StateFlow<State> = screenHeight.flatMapLatest { screenHeight ->
+  val state: StateFlow<State> = requestedStoryCount.flatMapLatest { requestedStoryCount ->
     flow {
       emit(State.Loading)
-      if ((screenHeight == null)) {
+      if ((requestedStoryCount == null)) {
         return@flow
       }
       val bestStoryIds = hnClient.getBestStoryIds().getOrElse {
         emit(State.Error(it))
         return@flow
       }
-      val bestStories = hnClient.getStoryOverviews(bestStoryIds.take(screenHeight)).getOrElse {
+      val bestStories = hnClient.getStoryOverviews(bestStoryIds.take(requestedStoryCount)).getOrElse {
         emit(State.Error(it))
         return@flow
       }
-      emit(State.Content(bestStories))
+      val uiStories = bestStories.map { story ->
+        UiStoryOverview(
+          title = story.title,
+          urlAbbreviated = story.url?.abbreviatedUrl(),
+        )
+      }
+      emit(State.Content(uiStories, 0))
+    }
+  }.combine(focusedIndex) { state, focusedIndex ->
+    when (state) {
+      is State.Loading -> state
+      is State.Error -> state
+      is State.Content -> state.copy(focusedIndex = focusedIndex)
     }
   }.stateIn(
     scope = viewModelScope,
@@ -83,11 +106,32 @@ class MainViewModel: ViewModel() {
     initialValue = State.Loading,
   )
 
-  fun setScreenHeight(screenHeight: Int) {
-    // No need to reload stories if the height gets smaller
-    // TODO: we should be smarter and only fetch/append the stories needed due to the new height
-    if (screenHeight > (this.screenHeight.value ?: 0)) {
-      this.screenHeight.value = screenHeight
+  fun requestStoryCount(requestedStoryCount: Int) {
+    // No need to reload stories if the requested count gets smaller than what we currently have
+    // TODO: we could be smarter and only fetch/append the stories needed due to the new count
+    if (requestedStoryCount > (this.requestedStoryCount.value ?: 0)) {
+      // Actually request 1.5x more than hinted
+      this.requestedStoryCount.value = (requestedStoryCount * 1.5).toInt()
     }
   }
+
+  fun focusUp() {
+    if (state.value !is State.Content) return
+    focusedIndex.value = (focusedIndex.value - 1).coerceAtLeast(0)
+  }
+
+  fun focusDown() {
+    val state = state.value
+    if (state !is State.Content) return
+    focusedIndex.value = (focusedIndex.value + 1).coerceAtMost(state.content.lastIndex)
+  }
+}
+
+private fun String.abbreviatedUrl(): String {
+  return removePrefix("https://")
+    .removePrefix("http://")
+    .removePrefix("www.")
+    .substringBefore('/')
+    // xyz.com -> xyz, but xxx.xyz.com -> xxx.xyz.com
+    .replace(Regex("^([^/.]+)\\.com($|/.*)"), "$1$2")
 }

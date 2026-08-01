@@ -30,7 +30,10 @@ import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jakewharton.mosaic.LocalTerminalState
+import com.jakewharton.mosaic.layout.KeyEvent
 import com.jakewharton.mosaic.layout.fillMaxSize
+import com.jakewharton.mosaic.layout.fillMaxWidth
+import com.jakewharton.mosaic.layout.onKeyEvent
 import com.jakewharton.mosaic.layout.size
 import com.jakewharton.mosaic.modifier.Modifier
 import com.jakewharton.mosaic.runMosaicBlocking
@@ -42,9 +45,13 @@ import com.jakewharton.mosaic.ui.Arrangement
 import com.jakewharton.mosaic.ui.Box
 import com.jakewharton.mosaic.ui.Color
 import com.jakewharton.mosaic.ui.Column
+import com.jakewharton.mosaic.ui.Row
 import com.jakewharton.mosaic.ui.Text
+import com.jakewharton.mosaic.ui.TextStyle
 import kotlinx.coroutines.awaitCancellation
 
+// Normally we'd clear the store when we're finished with Mosaic.
+// In practice however, Mosaic terminates when the whole app terminates, so a process lifetime is fine.
 object ApplicationViewModelStoreOwner : ViewModelStoreOwner {
   override val viewModelStore: ViewModelStore = ViewModelStore()
 }
@@ -59,7 +66,7 @@ fun main(av: Array<String>) {
     val screenHeight = screenSize.rows - 1
 
     LaunchedEffect(screenHeight) {
-      viewModel.setScreenHeight(screenHeight)
+      viewModel.requestStoryCount(screenHeight)
     }
 
     Box(
@@ -94,22 +101,50 @@ fun main(av: Array<String>) {
 
         is MainViewModel.State.Content -> {
           Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+              .fillMaxSize()
+              .onKeyEvent { keyEvent ->
+                when (keyEvent) {
+                  ArrowUp -> viewModel.focusUp()
+                  ArrowDown -> viewModel.focusDown()
+                  else -> return@onKeyEvent false
+                }
+                true
+              },
           ) {
             for ((index, story) in state.content.take(screenHeight).withIndex()) {
-              val url = story.url?.prettyUrl()?.let { " $it" } ?: ""
-              val index = "$index "
-              Text(
-                buildAnnotatedString {
-                  withStyle(SpanStyle(color = Color(.5f, .5f, .5f))) {
-                    append(index)
-                  }
-                  append(story.title.abbreviate(screenWidth - index.length - url.length))
-                  withStyle(SpanStyle(color = Color.Red)) {
-                    append(url)
-                  }
-                },
-              )
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+              ) {
+                val url = story.urlAbbreviated?.let { " $it" } ?: ""
+                val indexStr = "$index "
+                val title = story.title.abbreviate(screenWidth - indexStr.length - url.length)
+                Text(
+                  value = buildAnnotatedString {
+                    withStyle(
+                      SpanStyle(
+                        textStyle = if (state.focusedIndex == index) {
+                          TextStyle.Invert
+                        } else {
+                          TextStyle.Unspecified
+                        },
+                      ),
+                    ) {
+                      withStyle(SpanStyle(color = Color(.5f, .5f, .5f))) {
+                        append(indexStr)
+                      }
+                      append(title)
+                      withStyle(SpanStyle(color = Color.Red)) {
+                        append(url)
+                      }
+                      val padding = screenWidth - indexStr.length - title.length - url.length
+                      if (padding > 0) {
+                        append(" ".repeat(padding))
+                      }
+                    }
+                  },
+                )
+              }
             }
           }
         }
@@ -130,11 +165,5 @@ private fun String.abbreviate(maxLength: Int): String {
   }
 }
 
-private fun String.prettyUrl(): String {
-  return removePrefix("https://")
-    .removePrefix("http://")
-    .removePrefix("www.")
-    // xyz.com -> xyz
-    .replace(Regex("^([^/.]+)\\.com($|/.*)"), "$1$2")
-    .substringBefore('/')
-}
+private val ArrowUp = KeyEvent("ArrowUp")
+private val ArrowDown = KeyEvent("ArrowDown")
