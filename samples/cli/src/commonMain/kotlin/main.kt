@@ -23,18 +23,11 @@
  * limitations under the License.
  */
 
-import androidx.compose.runtime.LaunchedEffect
 import com.jakewharton.mosaic.runMosaicBlocking
-import kotlinx.coroutines.awaitCancellation
 import org.jraf.hntui.ui.main.MainScreen
-
 
 fun main(av: Array<String>) {
   runMosaicBlocking {
     MainScreen()
-
-    LaunchedEffect(Unit) {
-      awaitCancellation()
-    }
   }
 }

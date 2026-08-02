@@ -30,6 +30,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jakewharton.mosaic.layout.KeyEvent
+import com.jakewharton.mosaic.layout.drawBehind
 import com.jakewharton.mosaic.layout.fillMaxSize
 import com.jakewharton.mosaic.layout.onKeyEvent
 import com.jakewharton.mosaic.modifier.Modifier
@@ -42,6 +43,7 @@ import com.jakewharton.mosaic.ui.Arrangement
 import com.jakewharton.mosaic.ui.Box
 import com.jakewharton.mosaic.ui.Color
 import com.jakewharton.mosaic.ui.Column
+import com.jakewharton.mosaic.ui.Spacer
 import com.jakewharton.mosaic.ui.Text
 import com.jakewharton.mosaic.ui.TextStyle
 import com.jakewharton.mosaic.ui.UnderlineStyle
@@ -59,7 +61,6 @@ import org.jraf.klibhn.model.Story
 
 private val Escape = KeyEvent("Escape")
 
-@OptIn(FormatStringsInDatetimeFormats::class)
 @Composable
 fun StoryDetailsScreen(
   storyId: Story.Id,
@@ -118,54 +119,75 @@ fun StoryDetailsScreen(
           modifier = Modifier.fillMaxSize(),
         ) {
           val story = state.content
-          val titleLines = story.title.wrapped(screenWidth)
-          for (titleLine in titleLines) {
-            Text(
-              AnnotatedString(titleLine, SpanStyle(textStyle = TextStyle.Bold)),
-            )
-          }
-          story.url?.let {
-            val urlLines = it.wrapped(screenWidth)
-            for (urlLine in urlLines) {
-              Text(
-                AnnotatedString(urlLine, SpanStyle(underlineStyle = UnderlineStyle.Straight)),
-              )
-            }
-          }
-          Text(
-            buildAnnotatedString {
-              withStyle(SpanStyle(color = Color.Red)) {
-                append("${story.score} points")
-              }
-              append(' ')
-              withStyle(SpanStyle(color = Color.Magenta)) {
-                append(story.author)
-              }
-              append(' ')
-              withStyle(SpanStyle(color = Color.Cyan)) {
-                append(
-                  story.creationDate.toLocalDateTime(TimeZone.currentSystemDefault()).format(
-                    LocalDateTime.Format {
-                      byUnicodePattern("uuuu-MM-dd HH:mm")
-                    },
-                  ),
-                )
-              }
-              append(' ')
-              withStyle(SpanStyle(color = Color.Green)) {
-                val commentCount = story.comments.size
-                append("$commentCount comment${if (commentCount == 1) "" else "s"}")
-              }
-            },
-          )
-          story.text?.let {
-            val textLines = it.htmlToText().split("\n").wrapped(screenWidth)
-            for (textLine in textLines) {
-              Text(textLine)
-            }
+          Story(story, screenWidth)
+//          for (comment in story.comments.take(3)) {
+//            Comment (comment, screenWidth, 1)
+//          }
+          Box(
+            modifier = Modifier
+              .fillMaxSize()
+              .drawBehind {
+                for (i in 0..<height - 1) {
+                  drawText(row = i, column = 0, string = "$i")
+                }
+                drawText(row = height - 1, column = 0, "End")
+              },
+          ) {
+            Spacer(modifier = Modifier.fillMaxSize())
           }
         }
       }
+    }
+  }
+}
+
+@Composable
+@OptIn(FormatStringsInDatetimeFormats::class)
+private fun Story(story: Story.WithComments, screenWidth: Int) {
+  val titleLines = story.title.wrapped(screenWidth)
+  for (titleLine in titleLines) {
+    Text(
+      AnnotatedString(titleLine, SpanStyle(textStyle = TextStyle.Bold)),
+    )
+  }
+  story.url?.let {
+    val urlLines = it.wrapped(screenWidth)
+    for (urlLine in urlLines) {
+      Text(
+        AnnotatedString(urlLine, SpanStyle(underlineStyle = UnderlineStyle.Straight)),
+      )
+    }
+  }
+  Text(
+    buildAnnotatedString {
+      withStyle(SpanStyle(color = Color.Red)) {
+        append("${story.score} points")
+      }
+      append(' ')
+      withStyle(SpanStyle(color = Color.Magenta)) {
+        append(story.author)
+      }
+      append(' ')
+      withStyle(SpanStyle(color = Color.Cyan)) {
+        append(
+          story.creationDate.toLocalDateTime(TimeZone.currentSystemDefault()).format(
+            LocalDateTime.Format {
+              byUnicodePattern("uuuu-MM-dd HH:mm")
+            },
+          ),
+        )
+      }
+      append(' ')
+      withStyle(SpanStyle(color = Color.Green)) {
+        val commentCount = story.comments.size
+        append("$commentCount comment${if (commentCount == 1) "" else "s"}")
+      }
+    },
+  )
+  story.text?.let {
+    val textLines = it.htmlToText().split("\n").wrapped(screenWidth)
+    for (textLine in textLines) {
+      Text(textLine)
     }
   }
 }
