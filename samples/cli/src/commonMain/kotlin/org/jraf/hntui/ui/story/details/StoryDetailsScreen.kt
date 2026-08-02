@@ -32,14 +32,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jakewharton.mosaic.layout.KeyEvent
 import com.jakewharton.mosaic.layout.drawBehind
 import com.jakewharton.mosaic.layout.fillMaxSize
+import com.jakewharton.mosaic.layout.fillMaxWidth
 import com.jakewharton.mosaic.layout.onKeyEvent
 import com.jakewharton.mosaic.modifier.Modifier
 import com.jakewharton.mosaic.text.AnnotatedString
 import com.jakewharton.mosaic.text.SpanStyle
 import com.jakewharton.mosaic.text.buildAnnotatedString
 import com.jakewharton.mosaic.text.withStyle
-import com.jakewharton.mosaic.ui.Alignment
-import com.jakewharton.mosaic.ui.Arrangement
 import com.jakewharton.mosaic.ui.Box
 import com.jakewharton.mosaic.ui.Color
 import com.jakewharton.mosaic.ui.Column
@@ -55,6 +54,10 @@ import kotlinx.datetime.format.byUnicodePattern
 import kotlinx.datetime.toLocalDateTime
 import org.jraf.hntui.repository.HnRepository
 import org.jraf.hntui.ui.ApplicationViewModelStoreOwner
+import org.jraf.hntui.ui.common.Error
+import org.jraf.hntui.ui.common.Loading
+import org.jraf.hntui.util.WithConstraints
+import org.jraf.hntui.util.abbreviate
 import org.jraf.hntui.util.htmlToText
 import org.jraf.hntui.util.wrapped
 import org.jraf.klibhn.model.Story
@@ -64,8 +67,6 @@ private val Escape = KeyEvent("Escape")
 @Composable
 fun StoryDetailsScreen(
   storyId: Story.Id,
-  screenWidth: Int,
-  screenHeight: Int,
   onGoBackToStoryList: () -> Unit,
 ) {
   Box(
@@ -91,103 +92,97 @@ fun StoryDetailsScreen(
     val state by viewModel.state.collectAsState()
     when (val state = state) {
       StoryDetailsViewModel.State.Loading -> {
-        Column(
-          modifier = Modifier.fillMaxSize(),
-          verticalArrangement = Arrangement.Center,
-          horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-          Text(
-            value = "Loading...",
-          )
-        }
+        Loading()
       }
 
       is StoryDetailsViewModel.State.Error -> {
-        Column(
-          modifier = Modifier.fillMaxSize(),
-          verticalArrangement = Arrangement.Center,
-          horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-          Text(
-            value = "Error: ${state.throwable}",
-          )
-        }
+        Error(state.throwable)
       }
 
       is StoryDetailsViewModel.State.Content -> {
-        Column(
-          modifier = Modifier.fillMaxSize(),
-        ) {
-          val story = state.content
-          Story(story, screenWidth)
-//          for (comment in story.comments.take(3)) {
-//            Comment (comment, screenWidth, 1)
-//          }
-          Box(
-            modifier = Modifier
-              .fillMaxSize()
-              .drawBehind {
-                for (i in 0..<height - 1) {
-                  drawText(row = i, column = 0, string = "$i")
-                }
-                drawText(row = height - 1, column = 0, "End")
-              },
-          ) {
-            Spacer(modifier = Modifier.fillMaxSize())
-          }
-        }
+          Story(state)
       }
     }
   }
 }
 
 @Composable
-@OptIn(FormatStringsInDatetimeFormats::class)
-private fun Story(story: Story.WithComments, screenWidth: Int) {
-  val titleLines = story.title.wrapped(screenWidth)
-  for (titleLine in titleLines) {
-    Text(
-      AnnotatedString(titleLine, SpanStyle(textStyle = TextStyle.Bold)),
-    )
-  }
-  story.url?.let {
-    val urlLines = it.wrapped(screenWidth)
-    for (urlLine in urlLines) {
-      Text(
-        AnnotatedString(urlLine, SpanStyle(underlineStyle = UnderlineStyle.Straight)),
-      )
+private fun Story(content: StoryDetailsViewModel.State.Content) {
+  val story = content.story
+  Column(
+    modifier = Modifier.fillMaxSize(),
+  ) {
+    StoryHeader(story)
+//          for (comment in story.comments.take(3)) {
+//            Comment (comment, screenWidth, 1)
+//          }
+    Box(
+      modifier = Modifier
+        .fillMaxSize()
+        .drawBehind {
+          for (i in 0..<height - 1) {
+            drawText(row = i, column = 0, string = "$i")
+          }
+          drawText(row = height - 1, column = 0, "End")
+        },
+    ) {
+      Spacer(modifier = Modifier.fillMaxSize())
     }
   }
-  Text(
-    buildAnnotatedString {
-      withStyle(SpanStyle(color = Color.Red)) {
-        append("${story.score} points")
-      }
-      append(' ')
-      withStyle(SpanStyle(color = Color.Magenta)) {
-        append(story.author)
-      }
-      append(' ')
-      withStyle(SpanStyle(color = Color.Cyan)) {
-        append(
-          story.creationDate.toLocalDateTime(TimeZone.currentSystemDefault()).format(
-            LocalDateTime.Format {
-              byUnicodePattern("uuuu-MM-dd HH:mm")
-            },
-          ),
+}
+
+@Composable
+@OptIn(FormatStringsInDatetimeFormats::class)
+private fun StoryHeader(story: Story.WithComments) {
+  WithConstraints(modifier = Modifier.fillMaxWidth()) { constraints ->
+    val availableWidth = constraints.maxWidth
+    Column(modifier = Modifier.fillMaxWidth()) {
+      val titleLines = story.title.wrapped(availableWidth)
+      for (titleLine in titleLines) {
+        Text(
+          AnnotatedString(titleLine, SpanStyle(textStyle = TextStyle.Bold)),
         )
       }
-      append(' ')
-      withStyle(SpanStyle(color = Color.Green)) {
-        val commentCount = story.comments.size
-        append("$commentCount comment${if (commentCount == 1) "" else "s"}")
+      story.url?.let {
+        val urlLines = it.wrapped(availableWidth)
+        for (urlLine in urlLines) {
+          Text(
+            AnnotatedString(urlLine, SpanStyle(underlineStyle = UnderlineStyle.Straight)),
+          )
+        }
       }
-    },
-  )
-  story.text?.let {
-    val textLines = it.htmlToText().split("\n").wrapped(screenWidth)
-    for (textLine in textLines) {
-      Text(textLine)
+      Text(
+        buildAnnotatedString {
+          withStyle(SpanStyle(color = Color.Red)) {
+            append("${story.score} points")
+          }
+          append(' ')
+          withStyle(SpanStyle(color = Color.Magenta)) {
+            append(story.author)
+          }
+          append(' ')
+          withStyle(SpanStyle(color = Color.Cyan)) {
+            append(
+              story.creationDate.toLocalDateTime(TimeZone.currentSystemDefault()).format(
+                LocalDateTime.Format {
+                  byUnicodePattern("uuuu-MM-dd HH:mm")
+                },
+              ),
+            )
+          }
+          append(' ')
+          withStyle(SpanStyle(color = Color.Green)) {
+            val commentCount = story.comments.size
+            append("$commentCount comment${if (commentCount == 1) "" else "s"}")
+          }
+        }.abbreviate(availableWidth),
+      )
+      story.text?.let {
+        val textLines = it.htmlToText().split("\n").wrapped(availableWidth)
+        for (textLine in textLines) {
+          Text(textLine)
+        }
+      }
     }
   }
 }

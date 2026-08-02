@@ -49,7 +49,7 @@ class StoryListViewModel(private val hnRepository: HnRepository) : ViewModel(
     object Loading : State
     data class Error(val throwable: Throwable) : State
     data class Content(
-      val content: List<UiStoryOverview>,
+      val stories: List<UiStoryOverview>,
       val focusedIndex: Int,
       val scroll: Int,
     ) : State
@@ -114,6 +114,7 @@ class StoryListViewModel(private val hnRepository: HnRepository) : ViewModel(
   )
 
   fun setScreenHeight(screenHeight: Int) {
+    if (screenHeight == this.screenHeight) return
     this.screenHeight = screenHeight
     requestStoryCount(screenHeight)
     if (focusedIndex.value < scroll.value) {

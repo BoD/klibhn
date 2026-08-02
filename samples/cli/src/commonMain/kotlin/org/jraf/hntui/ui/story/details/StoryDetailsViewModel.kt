@@ -49,7 +49,7 @@ class StoryDetailsViewModel(
     object Loading : State
     data class Error(val throwable: Throwable) : State
     data class Content(
-      val content: Story.WithComments,
+      val story: Story.WithComments,
     ) : State
   }
 

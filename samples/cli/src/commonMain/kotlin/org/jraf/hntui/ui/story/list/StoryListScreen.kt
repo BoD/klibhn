@@ -37,14 +37,15 @@ import com.jakewharton.mosaic.modifier.Modifier
 import com.jakewharton.mosaic.text.SpanStyle
 import com.jakewharton.mosaic.text.buildAnnotatedString
 import com.jakewharton.mosaic.text.withStyle
-import com.jakewharton.mosaic.ui.Alignment
-import com.jakewharton.mosaic.ui.Arrangement
 import com.jakewharton.mosaic.ui.Color
 import com.jakewharton.mosaic.ui.Column
 import com.jakewharton.mosaic.ui.Text
 import com.jakewharton.mosaic.ui.TextStyle
 import org.jraf.hntui.repository.HnRepository
 import org.jraf.hntui.ui.ApplicationViewModelStoreOwner
+import org.jraf.hntui.ui.common.Error
+import org.jraf.hntui.ui.common.Loading
+import org.jraf.hntui.util.WithConstraints
 import org.jraf.hntui.util.abbreviate
 import org.jraf.klibhn.model.Story
 
@@ -55,98 +56,103 @@ private val Enter = KeyEvent("Enter")
 
 @Composable
 fun StoryListScreen(
-  screenWidth: Int,
-  screenHeight: Int,
   onSelectStory: (Story.Id) -> Unit,
 ) {
-  val viewModel = viewModel(ApplicationViewModelStoreOwner) { StoryListViewModel(HnRepository.instance) }
+  WithConstraints(modifier = Modifier.fillMaxSize()) { constraints ->
+    val availableHeight = constraints.maxHeight
+    val availableWidth = constraints.maxWidth
 
-  LaunchedEffect(screenHeight) {
-    viewModel.setScreenHeight(screenHeight)
+    val viewModel = viewModel(ApplicationViewModelStoreOwner) { StoryListViewModel(HnRepository.instance) }
+    LaunchedEffect(availableHeight) {
+      viewModel.setScreenHeight(availableHeight)
+    }
+
+    val state by viewModel.state.collectAsState()
+
+    when (val state = state) {
+      StoryListViewModel.State.Loading -> {
+        Loading()
+      }
+
+      is StoryListViewModel.State.Error -> {
+        Error(state.throwable)
+      }
+
+      is StoryListViewModel.State.Content -> {
+        StoryList(
+          content = state,
+          onFocusUp = viewModel::focusUp,
+          onFocusDown = viewModel::focusDown,
+          onSelectStory = onSelectStory,
+          availableHeight = availableHeight,
+          availableWidth = availableWidth,
+        )
+      }
+    }
   }
+}
 
-  val state by viewModel.state.collectAsState()
+@Composable
+private fun StoryList(
+  content: StoryListViewModel.State.Content,
+  onFocusUp: () -> Unit,
+  onFocusDown: () -> Unit,
+  onSelectStory: (Story.Id) -> Unit,
+  availableHeight: Int,
+  availableWidth: Int,
+) {
+  Column(
+    modifier = Modifier
+      .fillMaxSize()
+      .onKeyEvent { keyEvent ->
+        when (keyEvent) {
+          ArrowUp -> {
+            onFocusUp()
+          }
 
-  when (val state = state) {
-    StoryListViewModel.State.Loading -> {
-      Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-      ) {
-        Text(
-          value = "Loading...",
-        )
-      }
-    }
+          ArrowDown -> {
+            onFocusDown()
+          }
 
-    is StoryListViewModel.State.Error -> {
-      Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-      ) {
-        Text(
-          value = "Error: ${state.throwable}",
-        )
-      }
-    }
+          Enter -> {
+            onSelectStory(content.stories[content.focusedIndex].id)
+          }
 
-    is StoryListViewModel.State.Content -> {
-      Column(
-        modifier = Modifier
-          .fillMaxSize()
-          .onKeyEvent { keyEvent ->
-            when (keyEvent) {
-              ArrowUp -> {
-                viewModel.focusUp()
-              }
-
-              ArrowDown -> {
-                viewModel.focusDown()
-              }
-
-              Enter -> {
-                onSelectStory(state.content[state.focusedIndex].id)
-              }
-
-              else -> return@onKeyEvent false
-            }
-            true
-          },
-      ) {
-        for (story in state.content.drop(state.scroll).take(screenHeight)) {
-          val url = story.urlAbbreviated ?: ""
-          val indexStr = "${story.index + 1}"
-          val title = " " + story.title.abbreviate(screenWidth - indexStr.length - url.length - 2) + " "
-          val isFocused = state.focusedIndex == story.index
-          Text(
-            value = buildAnnotatedString {
-              withStyle(
-                SpanStyle(
-                  textStyle = if (isFocused) {
-                    TextStyle.Invert
-                  } else {
-                    TextStyle.Unspecified
-                  },
-                ),
-              ) {
-                withStyle(SpanStyle(color = Color(.5f, .5f, .5f))) {
-                  append(indexStr)
-                }
-                append(title)
-                withStyle(SpanStyle(textStyle = TextStyle.Dim + if (isFocused) TextStyle.Invert else TextStyle.Unspecified)) {
-                  append(url)
-                }
-                val padding = screenWidth - indexStr.length - title.length - url.length
-                if (padding > 0) {
-                  append(" ".repeat(padding))
-                }
-              }
-            },
-          )
+          else -> return@onKeyEvent false
         }
-      }
+        true
+      },
+  ) {
+    for (story in content.stories.drop(content.scroll).take(availableHeight)) {
+      val url = story.urlAbbreviated ?: ""
+      val indexStr = "${story.index + 1}"
+      val title = " " + story.title.abbreviate(availableWidth - indexStr.length - url.length - 2) + " "
+      val isFocused = content.focusedIndex == story.index
+      Text(
+        value = buildAnnotatedString {
+          withStyle(
+            SpanStyle(
+              textStyle = if (isFocused) {
+                TextStyle.Invert
+              } else {
+                TextStyle.Unspecified
+              },
+            ),
+          ) {
+            withStyle(SpanStyle(color = Color(.5f, .5f, .5f))) {
+              append(indexStr)
+            }
+            append(title)
+            withStyle(SpanStyle(textStyle = TextStyle.Dim + if (isFocused) TextStyle.Invert else TextStyle.Unspecified)) {
+              append(url)
+            }
+            val padding = availableWidth - indexStr.length - title.length - url.length
+            if (padding > 0) {
+              append(" ".repeat(padding))
+            }
+          }
+        },
+      )
     }
   }
 }

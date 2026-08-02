@@ -40,28 +40,23 @@ import org.jraf.hntui.ui.story.list.StoryListScreen
 @Composable
 fun MainScreen() {
   val screenSize = LocalTerminalState.current.size
-  val screenWidth = screenSize.columns
-  // Need to remove 1 because of the cursor which adds a new line
-  val screenHeight = screenSize.rows - 1
-
   Box(
-    modifier = Modifier.size(width = screenWidth, height = screenHeight),
+    modifier = Modifier.size(
+      width = screenSize.columns,
+      height = screenSize.rows - 1, // Need to remove 1 because of the cursor which adds a new line
+    ),
   ) {
     val viewModel = viewModel(ApplicationViewModelStoreOwner) { MainViewModel() }
     val state by viewModel.state.collectAsState()
 
     when (val state = state) {
       is MainViewModel.State.StoryList -> StoryListScreen(
-        screenWidth = screenWidth,
-        screenHeight = screenHeight,
-        onSelectStory = { id -> viewModel.selectStory(id) }
+        onSelectStory = { id -> viewModel.selectStory(id) },
       )
 
       is MainViewModel.State.StoryDetails -> StoryDetailsScreen(
-        screenWidth = screenWidth,
-        screenHeight = screenHeight,
         storyId = state.id,
-        onGoBackToStoryList = { viewModel.goBackToStoryList() }
+        onGoBackToStoryList = { viewModel.goBackToStoryList() },
       )
     }
   }

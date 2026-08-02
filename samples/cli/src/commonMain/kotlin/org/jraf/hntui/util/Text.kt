@@ -25,11 +25,30 @@
 
 package org.jraf.hntui.util
 
+import com.jakewharton.mosaic.text.AnnotatedString
+import com.jakewharton.mosaic.text.buildAnnotatedString
+
 fun String.abbreviate(maxLength: Int): String {
   return if (length <= maxLength) {
     this
   } else {
-    take(maxLength - 1) + "…"
+    val abbreviated = take(maxLength - 1)
+    val spacesSuffix = abbreviated.takeLastWhile { it.isWhitespace() }
+    abbreviated.trim() + "…" + spacesSuffix
+  }
+}
+
+fun AnnotatedString.abbreviate(maxLength: Int): AnnotatedString {
+  return if (length <= maxLength) {
+    this
+  } else {
+    buildAnnotatedString {
+      val abbreviated = take(maxLength - 1)
+      val spacesSuffix = abbreviated.takeLastWhile { it.isWhitespace() }
+      append(abbreviated.trim())
+      append("…")
+      append(spacesSuffix)
+    }
   }
 }
 
