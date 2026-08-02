@@ -4,5 +4,4 @@ $dokka.linkExtension:html
 module:klibhn
 org.jraf.klibhn
 org.jraf.klibhn.client
-org.jraf.klibhn.internal.json
 org.jraf.klibhn.model
