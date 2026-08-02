@@ -23,18 +23,33 @@
  * limitations under the License.
  */
 
-import androidx.compose.runtime.LaunchedEffect
-import com.jakewharton.mosaic.runMosaicBlocking
-import kotlinx.coroutines.awaitCancellation
-import org.jraf.hntui.ui.main.MainScreen
+package org.jraf.hntui.ui.main
 
+import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import org.jraf.klibhn.model.Story
 
-fun main(av: Array<String>) {
-  runMosaicBlocking {
-    MainScreen()
+class MainViewModel : ViewModel(
+  // The default scope uses Dispatchers.Main.immediate, which is not available by default.
+  // Use Dispatchers.Default instead.
+  viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+) {
+  sealed interface State {
+    object StoryList : State
+    data class StoryDetails(val id: Story.Id) : State
+  }
 
-    LaunchedEffect(Unit) {
-      awaitCancellation()
-    }
+  val state: StateFlow<State> field = MutableStateFlow<State>(State.StoryList)
+
+  fun selectStory(id: Story.Id) {
+    state.value = State.StoryDetails(id)
+  }
+
+  fun goBackToStoryList() {
+    state.value = State.StoryList
   }
 }

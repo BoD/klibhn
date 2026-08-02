@@ -34,6 +34,7 @@ kotlin {
 
         implementation("com.jakewharton.mosaic:mosaic-runtime:0.18.0")
         implementation(libs.jetbrains.androidx.lifecycle.viewmodelCompose)
+        implementation(libs.kotlinx.datetime)
       }
     }
   }

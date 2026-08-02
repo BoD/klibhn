@@ -23,18 +23,13 @@
  * limitations under the License.
  */
 
-import androidx.compose.runtime.LaunchedEffect
-import com.jakewharton.mosaic.runMosaicBlocking
-import kotlinx.coroutines.awaitCancellation
-import org.jraf.hntui.ui.main.MainScreen
+package org.jraf.hntui.ui
 
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
 
-fun main(av: Array<String>) {
-  runMosaicBlocking {
-    MainScreen()
-
-    LaunchedEffect(Unit) {
-      awaitCancellation()
-    }
-  }
+// Normally we'd clear the store when we're finished with Mosaic.
+// In practice however, Mosaic terminates when the whole app terminates, so a process lifetime is fine.
+object ApplicationViewModelStoreOwner : ViewModelStoreOwner {
+  override val viewModelStore: ViewModelStore = ViewModelStore()
 }

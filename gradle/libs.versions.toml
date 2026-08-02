@@ -6,6 +6,7 @@ kotlinx-serialization = "1.11.0"
 klibnanolog = "1.2.1"
 compose = "1.11.1"
 jetbrains-androidx-lifecycle = "2.9.4"
+kotlinx-datetime = "0.8.0"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -25,4 +26,4 @@ ktor-client-darwin = { group = "io.ktor", name = "ktor-client-darwin", version.r
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 klibnanolog = { group = "org.jraf.klibnanolog", name = "klibnanolog", version.ref = "klibnanolog" }
 jetbrains-androidx-lifecycle-viewmodelCompose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "jetbrains-androidx-lifecycle" }
-#jetbrains-androidx-lifecycle-viewmodelCompose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "jetbrains-androidx-lifecycle" }
+kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }

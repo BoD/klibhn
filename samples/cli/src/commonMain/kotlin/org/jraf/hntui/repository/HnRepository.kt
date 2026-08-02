@@ -23,18 +23,35 @@
  * limitations under the License.
  */
 
-import androidx.compose.runtime.LaunchedEffect
-import com.jakewharton.mosaic.runMosaicBlocking
-import kotlinx.coroutines.awaitCancellation
-import org.jraf.hntui.ui.main.MainScreen
+package org.jraf.hntui.repository
 
+import org.jraf.klibhn.client.HnClient
+import org.jraf.klibhn.model.Story
 
-fun main(av: Array<String>) {
-  runMosaicBlocking {
-    MainScreen()
+class HnRepository private constructor() {
+  private val hnClient by lazy {
+    HnClient(
+      HnClient.Configuration(
+        HnClient.Configuration.Http(
+          loggingLevel = HnClient.Configuration.Http.HttpLoggingLevel.NONE,
+        ),
+      ),
+    )
+  }
 
-    LaunchedEffect(Unit) {
-      awaitCancellation()
-    }
+  suspend fun getBestStoryIds(): Result<List<Story.Id>> {
+    return hnClient.getBestStoryIds()
+  }
+
+  suspend fun getStoryOverviews(storyIdsToLoad: List<Story.Id>): Result<List<Story.Overview>> {
+    return hnClient.getStoryOverviews(storyIdsToLoad)
+  }
+
+  suspend fun getStoryWithComments(storyId: Story.Id): Result<Story.WithComments> {
+    return hnClient.getStoryWithComments(storyId)
+  }
+
+  companion object {
+    val instance by lazy { HnRepository() }
   }
 }
