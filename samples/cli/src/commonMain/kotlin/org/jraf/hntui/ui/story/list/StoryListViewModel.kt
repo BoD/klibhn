@@ -27,9 +27,6 @@ package org.jraf.hntui.ui.story.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -42,11 +39,7 @@ import org.jraf.hntui.data.HnRepository
 import org.jraf.klibhn.model.Story
 import kotlin.time.Duration.Companion.seconds
 
-class StoryListViewModel(private val hnRepository: HnRepository) : ViewModel(
-  // The default scope uses Dispatchers.Main.immediate, which is not available by default.
-  // Use Dispatchers.Default instead.
-  viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
-) {
+class StoryListViewModel(private val hnRepository: HnRepository) : ViewModel() {
   sealed interface UiState {
     object Loading : UiState
     data class Error(val throwable: Throwable) : UiState

@@ -23,26 +23,29 @@
  * limitations under the License.
  */
 
-package org.jraf.hntui.ui.main
+package org.jraf.hntui.util
 
-import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import org.jraf.klibhn.model.Story
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.MainCoroutineDispatcher
+import kotlinx.coroutines.Runnable
+import kotlinx.coroutines.internal.MainDispatcherFactory
+import kotlin.coroutines.CoroutineContext
 
-class MainViewModel : ViewModel() {
-  sealed interface UiState {
-    object StoryList : UiState
-    data class StoryDetails(val id: Story.Id) : UiState
+class TuiMainCoroutineDispatcher : MainCoroutineDispatcher() {
+  override fun dispatch(context: CoroutineContext, block: Runnable) {
+    Dispatchers.Default.dispatch(context, block)
   }
 
-  val uiState: StateFlow<UiState> field = MutableStateFlow<UiState>(UiState.StoryList)
+  override val immediate: MainCoroutineDispatcher = this
+}
 
-  fun selectStory(id: Story.Id) {
-    uiState.value = UiState.StoryDetails(id)
-  }
 
-  fun goBackToStoryList() {
-    uiState.value = UiState.StoryList
+@OptIn(InternalCoroutinesApi::class)
+internal class TuiDispatcherFactory : MainDispatcherFactory {
+  override val loadPriority: Int = 0
+
+  override fun createDispatcher(allFactories: List<MainDispatcherFactory>): MainCoroutineDispatcher {
+    return TuiMainCoroutineDispatcher()
   }
 }
