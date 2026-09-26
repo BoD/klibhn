@@ -23,7 +23,7 @@
  * limitations under the License.
  */
 
-package org.jraf.hntui.repository
+package org.jraf.hntui.data
 
 import org.jraf.klibhn.client.HnClient
 import org.jraf.klibhn.model.Story

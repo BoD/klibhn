@@ -26,8 +26,8 @@
 package org.jraf.hntui.ui.story.details
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jakewharton.mosaic.layout.KeyEvent
 import com.jakewharton.mosaic.layout.drawBehind
@@ -52,10 +52,10 @@ import kotlinx.datetime.format
 import kotlinx.datetime.format.FormatStringsInDatetimeFormats
 import kotlinx.datetime.format.byUnicodePattern
 import kotlinx.datetime.toLocalDateTime
-import org.jraf.hntui.repository.HnRepository
+import org.jraf.hntui.data.HnRepository
 import org.jraf.hntui.ui.ApplicationViewModelStoreOwner
-import org.jraf.hntui.ui.common.Error
-import org.jraf.hntui.ui.common.Loading
+import org.jraf.hntui.ui.components.Error
+import org.jraf.hntui.ui.components.Loading
 import org.jraf.hntui.util.WithConstraints
 import org.jraf.hntui.util.abbreviate
 import org.jraf.hntui.util.htmlToText
@@ -89,25 +89,25 @@ fun StoryDetailsScreen(
     ) {
       StoryDetailsViewModel(hnRepository = HnRepository.instance, storyId = storyId)
     }
-    val state by viewModel.state.collectAsState()
-    when (val state = state) {
-      StoryDetailsViewModel.State.Loading -> {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    when (val uiState = uiState) {
+      StoryDetailsViewModel.UiState.Loading -> {
         Loading()
       }
 
-      is StoryDetailsViewModel.State.Error -> {
-        Error(state.throwable)
+      is StoryDetailsViewModel.UiState.Error -> {
+        Error(uiState.throwable)
       }
 
-      is StoryDetailsViewModel.State.Content -> {
-          Story(state)
+      is StoryDetailsViewModel.UiState.Content -> {
+          Story(uiState)
       }
     }
   }
 }
 
 @Composable
-private fun Story(content: StoryDetailsViewModel.State.Content) {
+private fun Story(content: StoryDetailsViewModel.UiState.Content) {
   val story = content.story
   Column(
     modifier = Modifier.fillMaxSize(),

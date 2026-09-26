@@ -64,6 +64,6 @@ interface HnClient : AutoCloseable {
 }
 
 fun HnClient(
-  configuration: HnClient.Configuration,
+  configuration: HnClient.Configuration = HnClient.Configuration(),
 ): HnClient = HnClientImpl(configuration)
 

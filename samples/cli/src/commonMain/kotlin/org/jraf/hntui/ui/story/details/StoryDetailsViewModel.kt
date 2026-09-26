@@ -32,10 +32,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
-import org.jraf.hntui.repository.HnRepository
+import org.jraf.hntui.data.HnRepository
 import org.jraf.klibhn.model.Story
+import kotlin.time.Duration.Companion.seconds
 
 class StoryDetailsViewModel(
   private val hnRepository: HnRepository,
@@ -45,26 +47,26 @@ class StoryDetailsViewModel(
   // Use Dispatchers.Default instead.
   viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
 ) {
-  sealed interface State {
-    object Loading : State
-    data class Error(val throwable: Throwable) : State
+  sealed interface UiState {
+    object Loading : UiState
+    data class Error(val throwable: Throwable) : UiState
     data class Content(
       val story: Story.WithComments,
-    ) : State
+    ) : UiState
   }
 
-  val state: StateFlow<State> = flow {
+  val uiState: StateFlow<UiState> = flow {
     hnRepository.getStoryWithComments(storyId).fold(
       onSuccess = { storyWithComments ->
-        emit(State.Content(storyWithComments))
+        emit(UiState.Content(storyWithComments))
       },
       onFailure = { throwable ->
-        emit(State.Error(throwable))
+        emit(UiState.Error(throwable))
       },
     )
   }.stateIn(
     scope = viewModelScope,
-    started = SharingStarted.WhileSubscribed(),
-    initialValue = State.Loading,
+    started = SharingStarted.WhileSubscribed(5.seconds),
+    initialValue = UiState.Loading,
   )
 }

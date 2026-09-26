@@ -23,7 +23,7 @@
  * limitations under the License.
  */
 
-package org.jraf.hntui.ui.common
+package org.jraf.hntui.ui.components
 
 import androidx.compose.runtime.Composable
 import com.jakewharton.mosaic.layout.fillMaxSize

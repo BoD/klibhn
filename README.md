@@ -1,5 +1,5 @@
 # klibhn
 
-A client library for the HackerNews API for Kotlin.
+A HackerNews API client library for Kotlin.
 
 Work in progress!!!

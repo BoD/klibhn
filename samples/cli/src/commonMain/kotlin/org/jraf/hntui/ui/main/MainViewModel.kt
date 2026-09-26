@@ -38,18 +38,18 @@ class MainViewModel : ViewModel(
   // Use Dispatchers.Default instead.
   viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
 ) {
-  sealed interface State {
-    object StoryList : State
-    data class StoryDetails(val id: Story.Id) : State
+  sealed interface UiState {
+    object StoryList : UiState
+    data class StoryDetails(val id: Story.Id) : UiState
   }
 
-  val state: StateFlow<State> field = MutableStateFlow<State>(State.StoryList)
+  val uiState: StateFlow<UiState> field = MutableStateFlow<UiState>(UiState.StoryList)
 
   fun selectStory(id: Story.Id) {
-    state.value = State.StoryDetails(id)
+    uiState.value = UiState.StoryDetails(id)
   }
 
   fun goBackToStoryList() {
-    state.value = State.StoryList
+    uiState.value = UiState.StoryList
   }
 }

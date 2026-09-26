@@ -26,8 +26,8 @@
 package org.jraf.hntui.ui.main
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jakewharton.mosaic.LocalTerminalState
 import com.jakewharton.mosaic.layout.size
@@ -47,15 +47,15 @@ fun MainScreen() {
     ),
   ) {
     val viewModel = viewModel(ApplicationViewModelStoreOwner) { MainViewModel() }
-    val state by viewModel.state.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    when (val state = state) {
-      is MainViewModel.State.StoryList -> StoryListScreen(
+    when (val uiState = uiState) {
+      is MainViewModel.UiState.StoryList -> StoryListScreen(
         onSelectStory = { id -> viewModel.selectStory(id) },
       )
 
-      is MainViewModel.State.StoryDetails -> StoryDetailsScreen(
-        storyId = state.id,
+      is MainViewModel.UiState.StoryDetails -> StoryDetailsScreen(
+        storyId = uiState.id,
         onGoBackToStoryList = { viewModel.goBackToStoryList() },
       )
     }

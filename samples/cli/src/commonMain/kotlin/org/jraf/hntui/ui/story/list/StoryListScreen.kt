@@ -27,8 +27,8 @@ package org.jraf.hntui.ui.story.list
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jakewharton.mosaic.layout.KeyEvent
 import com.jakewharton.mosaic.layout.fillMaxSize
@@ -41,10 +41,10 @@ import com.jakewharton.mosaic.ui.Color
 import com.jakewharton.mosaic.ui.Column
 import com.jakewharton.mosaic.ui.Text
 import com.jakewharton.mosaic.ui.TextStyle
-import org.jraf.hntui.repository.HnRepository
+import org.jraf.hntui.data.HnRepository
 import org.jraf.hntui.ui.ApplicationViewModelStoreOwner
-import org.jraf.hntui.ui.common.Error
-import org.jraf.hntui.ui.common.Loading
+import org.jraf.hntui.ui.components.Error
+import org.jraf.hntui.ui.components.Loading
 import org.jraf.hntui.util.WithConstraints
 import org.jraf.hntui.util.abbreviate
 import org.jraf.klibhn.model.Story
@@ -67,20 +67,20 @@ fun StoryListScreen(
       viewModel.setScreenHeight(availableHeight)
     }
 
-    val state by viewModel.state.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    when (val state = state) {
-      StoryListViewModel.State.Loading -> {
+    when (val uiState = uiState) {
+      StoryListViewModel.UiState.Loading -> {
         Loading()
       }
 
-      is StoryListViewModel.State.Error -> {
-        Error(state.throwable)
+      is StoryListViewModel.UiState.Error -> {
+        Error(uiState.throwable)
       }
 
-      is StoryListViewModel.State.Content -> {
+      is StoryListViewModel.UiState.Content -> {
         StoryList(
-          content = state,
+          content = uiState,
           onFocusUp = viewModel::focusUp,
           onFocusDown = viewModel::focusDown,
           onSelectStory = onSelectStory,
@@ -94,7 +94,7 @@ fun StoryListScreen(
 
 @Composable
 private fun StoryList(
-  content: StoryListViewModel.State.Content,
+  content: StoryListViewModel.UiState.Content,
   onFocusUp: () -> Unit,
   onFocusDown: () -> Unit,
   onSelectStory: (Story.Id) -> Unit,
