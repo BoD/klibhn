@@ -41,7 +41,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
 import org.jraf.klibhn.client.HnClient
-import org.jraf.klibhn.client.HnClient.Configuration.Http.HttpLoggingLevel
+import org.jraf.klibhn.client.HnClient.Configuration.Http.LoggingLevel
 import org.jraf.klibhn.internal.json.JsonComment
 import org.jraf.klibhn.internal.json.JsonStoryOverview
 import org.jraf.klibhn.internal.json.JsonStoryWithComments
@@ -75,7 +75,7 @@ internal class HnClientImpl(
       }
       engine {
         // Set up a proxy if requested
-        configuration.http.httpProxy?.let { httpProxy ->
+        configuration.http.proxy?.let { httpProxy ->
           proxy = ProxyBuilder.http(
             URLBuilder().apply {
               host = httpProxy.host
@@ -86,7 +86,7 @@ internal class HnClientImpl(
       }
 
       // Setup logging if requested
-      if (configuration.http.loggingLevel != HttpLoggingLevel.NONE) {
+      if (configuration.http.loggingLevel != LoggingLevel.NONE) {
         install(Logging) {
           logger = object : Logger {
             override fun log(message: String) {
@@ -94,11 +94,11 @@ internal class HnClientImpl(
             }
           }
           level = when (configuration.http.loggingLevel) {
-            HttpLoggingLevel.NONE -> LogLevel.NONE
-            HttpLoggingLevel.INFO -> LogLevel.INFO
-            HttpLoggingLevel.HEADERS -> LogLevel.HEADERS
-            HttpLoggingLevel.BODY -> LogLevel.BODY
-            HttpLoggingLevel.ALL -> LogLevel.ALL
+            LoggingLevel.NONE -> LogLevel.NONE
+            LoggingLevel.INFO -> LogLevel.INFO
+            LoggingLevel.HEADERS -> LogLevel.HEADERS
+            LoggingLevel.BODY -> LogLevel.BODY
+            LoggingLevel.ALL -> LogLevel.ALL
           }
         }
       }

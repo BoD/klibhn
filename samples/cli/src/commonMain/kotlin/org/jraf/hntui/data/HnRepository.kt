@@ -33,7 +33,7 @@ class HnRepository private constructor() {
     HnClient(
       HnClient.Configuration(
         HnClient.Configuration.Http(
-          loggingLevel = HnClient.Configuration.Http.HttpLoggingLevel.NONE,
+          loggingLevel = HnClient.Configuration.Http.LoggingLevel.NONE,
         ),
       ),
     )
