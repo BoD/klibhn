@@ -28,6 +28,7 @@
 package org.jraf.klibhn.internal.client
 
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.ProxyBuilder
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -41,10 +42,13 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
 import org.jraf.klibhn.client.HnClient
+import org.jraf.klibhn.client.HnClient.Configuration
 import org.jraf.klibhn.client.HnClient.Configuration.Http.LoggingLevel
 import org.jraf.klibhn.internal.json.JsonComment
 import org.jraf.klibhn.internal.json.JsonStoryOverview
 import org.jraf.klibhn.internal.json.JsonStoryWithComments
+import org.jraf.klibhn.internal.model.CommentImpl
+import org.jraf.klibhn.internal.model.StoryImpl
 import org.jraf.klibhn.model.Comment
 import org.jraf.klibhn.model.Story
 import org.jraf.klibnanolog.logd
@@ -52,14 +56,14 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 internal class HnClientImpl(
-  private var configuration: HnClient.Configuration,
+  private var configuration: Configuration,
 ) : HnClient {
   private val service: HnService by lazy {
     HnService(provideHttpClient())
   }
 
   private fun provideHttpClient(): HttpClient {
-    return HttpClient {
+    return createHttpClient(configuration.http) {
       install(ContentNegotiation) {
         json(
           Json {
@@ -132,7 +136,12 @@ internal class HnClientImpl(
   }
 }
 
-private fun JsonStoryOverview.toStoryOverview() = Story.Overview(
+internal expect fun createHttpClient(
+  configuration: Configuration.Http,
+  configure: HttpClientConfig<*>.() -> Unit,
+): HttpClient
+
+private fun JsonStoryOverview.toStoryOverview() = StoryImpl.Overview(
   id = Story.Id(id),
   creationDate = Instant.fromEpochMilliseconds(time * 1000),
   title = title,
@@ -143,7 +152,7 @@ private fun JsonStoryOverview.toStoryOverview() = Story.Overview(
   commentCount = descendants,
 )
 
-private fun JsonStoryWithComments.toStory() = Story.WithComments(
+private fun JsonStoryWithComments.toStory() = StoryImpl.WithComments(
   id = Story.Id(id),
   creationDate = Instant.fromEpochMilliseconds(created_at_i * 1000),
   title = title,
@@ -156,8 +165,8 @@ private fun JsonStoryWithComments.toStory() = Story.WithComments(
   },
 )
 
-private fun JsonComment.toComment(): Comment = Comment(
-  id = Comment.Id(id),
+private fun JsonComment.toComment(): Comment = CommentImpl(
+  id = CommentImpl.Id(id),
   creationDate = Instant.fromEpochMilliseconds(created_at_i * 1000),
   author = author,
   text = text,

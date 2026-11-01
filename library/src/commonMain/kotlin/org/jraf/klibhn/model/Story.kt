@@ -40,27 +40,27 @@ sealed interface Story {
   val text: String?
   val url: String?
 
-  data class Overview(
-    override val id: Id,
-    override val creationDate: Instant,
-    override val title: String,
-    override val author: String,
-    override val score: Int,
-    override val text: String?,
-    override val url: String?,
-    val commentCount: Int,
-  ) : Story
+  interface Overview : Story {
+    override val id: Id
+    override val creationDate: Instant
+    override val title: String
+    override val author: String
+    override val score: Int
+    override val text: String?
+    override val url: String?
+    val commentCount: Int
+  }
 
-  data class WithComments(
-    override val id: Id,
-    override val creationDate: Instant,
-    override val title: String,
-    override val author: String,
-    override val score: Int,
-    override val text: String?,
-    override val url: String?,
+  interface WithComments : Story {
+    override val id: Id
+    override val creationDate: Instant
+    override val title: String
+    override val author: String
+    override val score: Int
+    override val text: String?
+    override val url: String?
     val comments: List<Comment>
-  ) : Story
+  }
 
   @JvmInline
   value class Id(

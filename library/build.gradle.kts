@@ -43,8 +43,8 @@ kotlin {
 
     macosArm64Main {
       dependencies {
-        // Ktor CIO
-        implementation(libs.ktor.client.darwin)
+        // Ktor curl
+        implementation(libs.ktor.client.curl)
       }
     }
   }

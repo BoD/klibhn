@@ -35,6 +35,7 @@ interface HnClient : AutoCloseable {
     class Http(
       val loggingLevel: LoggingLevel = LoggingLevel.NONE,
       val proxy: Proxy? = null,
+      val bypassSslChecks: Boolean = false,
     ) {
       class Proxy(
         val host: String,

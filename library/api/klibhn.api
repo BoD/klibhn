@@ -3,8 +3,10 @@ public final class org/jraf/klibhn/VersionKt {
 }
 
 public abstract interface class org/jraf/klibhn/client/HnClient : java/lang/AutoCloseable {
-	public abstract fun getBestStoryIds (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun getStory (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getBestStoryIds-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getStoryOverView-FEoTcrY (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getStoryOverviews-gIAlu-s (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getStoryWithComments-FEoTcrY (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/jraf/klibhn/client/HnClient$Configuration {
@@ -16,24 +18,25 @@ public final class org/jraf/klibhn/client/HnClient$Configuration {
 
 public final class org/jraf/klibhn/client/HnClient$Configuration$Http {
 	public fun <init> ()V
-	public fun <init> (Lorg/jraf/klibhn/client/HnClient$Configuration$Http$HttpLoggingLevel;Lorg/jraf/klibhn/client/HnClient$Configuration$Http$HttpProxy;)V
-	public synthetic fun <init> (Lorg/jraf/klibhn/client/HnClient$Configuration$Http$HttpLoggingLevel;Lorg/jraf/klibhn/client/HnClient$Configuration$Http$HttpProxy;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getHttpProxy ()Lorg/jraf/klibhn/client/HnClient$Configuration$Http$HttpProxy;
-	public final fun getLoggingLevel ()Lorg/jraf/klibhn/client/HnClient$Configuration$Http$HttpLoggingLevel;
+	public fun <init> (Lorg/jraf/klibhn/client/HnClient$Configuration$Http$LoggingLevel;Lorg/jraf/klibhn/client/HnClient$Configuration$Http$Proxy;Z)V
+	public synthetic fun <init> (Lorg/jraf/klibhn/client/HnClient$Configuration$Http$LoggingLevel;Lorg/jraf/klibhn/client/HnClient$Configuration$Http$Proxy;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getBypassSslChecks ()Z
+	public final fun getLoggingLevel ()Lorg/jraf/klibhn/client/HnClient$Configuration$Http$LoggingLevel;
+	public final fun getProxy ()Lorg/jraf/klibhn/client/HnClient$Configuration$Http$Proxy;
 }
 
-public final class org/jraf/klibhn/client/HnClient$Configuration$Http$HttpLoggingLevel : java/lang/Enum {
-	public static final field ALL Lorg/jraf/klibhn/client/HnClient$Configuration$Http$HttpLoggingLevel;
-	public static final field BODY Lorg/jraf/klibhn/client/HnClient$Configuration$Http$HttpLoggingLevel;
-	public static final field HEADERS Lorg/jraf/klibhn/client/HnClient$Configuration$Http$HttpLoggingLevel;
-	public static final field INFO Lorg/jraf/klibhn/client/HnClient$Configuration$Http$HttpLoggingLevel;
-	public static final field NONE Lorg/jraf/klibhn/client/HnClient$Configuration$Http$HttpLoggingLevel;
+public final class org/jraf/klibhn/client/HnClient$Configuration$Http$LoggingLevel : java/lang/Enum {
+	public static final field ALL Lorg/jraf/klibhn/client/HnClient$Configuration$Http$LoggingLevel;
+	public static final field BODY Lorg/jraf/klibhn/client/HnClient$Configuration$Http$LoggingLevel;
+	public static final field HEADERS Lorg/jraf/klibhn/client/HnClient$Configuration$Http$LoggingLevel;
+	public static final field INFO Lorg/jraf/klibhn/client/HnClient$Configuration$Http$LoggingLevel;
+	public static final field NONE Lorg/jraf/klibhn/client/HnClient$Configuration$Http$LoggingLevel;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lorg/jraf/klibhn/client/HnClient$Configuration$Http$HttpLoggingLevel;
-	public static fun values ()[Lorg/jraf/klibhn/client/HnClient$Configuration$Http$HttpLoggingLevel;
+	public static fun valueOf (Ljava/lang/String;)Lorg/jraf/klibhn/client/HnClient$Configuration$Http$LoggingLevel;
+	public static fun values ()[Lorg/jraf/klibhn/client/HnClient$Configuration$Http$LoggingLevel;
 }
 
-public final class org/jraf/klibhn/client/HnClient$Configuration$Http$HttpProxy {
+public final class org/jraf/klibhn/client/HnClient$Configuration$Http$Proxy {
 	public fun <init> (Ljava/lang/String;I)V
 	public final fun getHost ()Ljava/lang/String;
 	public final fun getPort ()I
@@ -41,125 +44,62 @@ public final class org/jraf/klibhn/client/HnClient$Configuration$Http$HttpProxy 
 
 public final class org/jraf/klibhn/client/HnClientKt {
 	public static final fun HnClient (Lorg/jraf/klibhn/client/HnClient$Configuration;)Lorg/jraf/klibhn/client/HnClient;
+	public static synthetic fun HnClient$default (Lorg/jraf/klibhn/client/HnClient$Configuration;ILjava/lang/Object;)Lorg/jraf/klibhn/client/HnClient;
 }
 
-public final class org/jraf/klibhn/internal/json/JsonComment {
-	public static final field Companion Lorg/jraf/klibhn/internal/json/JsonComment$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/util/List;JJLjava/lang/String;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/util/List;
-	public final fun component3 ()J
-	public final fun component4 ()J
-	public final fun component5 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/util/List;JJLjava/lang/String;)Lorg/jraf/klibhn/internal/json/JsonComment;
-	public static synthetic fun copy$default (Lorg/jraf/klibhn/internal/json/JsonComment;Ljava/lang/String;Ljava/util/List;JJLjava/lang/String;ILjava/lang/Object;)Lorg/jraf/klibhn/internal/json/JsonComment;
+public abstract interface class org/jraf/klibhn/model/Comment {
+	public abstract fun getAuthor ()Ljava/lang/String;
+	public abstract fun getComments ()Ljava/util/List;
+	public abstract fun getCreationDate ()Lkotlin/time/Instant;
+	public abstract fun getId ()Lorg/jraf/klibhn/model/Comment$Id;
+	public abstract fun getText ()Ljava/lang/String;
+}
+
+public abstract interface class org/jraf/klibhn/model/Comment$Id {
+}
+
+public abstract interface class org/jraf/klibhn/model/Story {
+	public abstract fun getAuthor ()Ljava/lang/String;
+	public abstract fun getCreationDate ()Lkotlin/time/Instant;
+	public abstract fun getId-P1wMUsk ()J
+	public abstract fun getScore ()I
+	public abstract fun getText ()Ljava/lang/String;
+	public abstract fun getTitle ()Ljava/lang/String;
+	public abstract fun getUrl ()Ljava/lang/String;
+}
+
+public final class org/jraf/klibhn/model/Story$Id {
+	public static final synthetic fun box-impl (J)Lorg/jraf/klibhn/model/Story$Id;
+	public static fun constructor-impl (J)J
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getAuthor ()Ljava/lang/String;
-	public final fun getChildren ()Ljava/util/List;
-	public final fun getCreated_at_i ()J
-	public final fun getId ()J
-	public final fun getText ()Ljava/lang/String;
+	public static fun equals-impl (JLjava/lang/Object;)Z
+	public static final fun equals-impl0 (JJ)Z
 	public fun hashCode ()I
+	public static fun hashCode-impl (J)I
 	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (J)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()J
 }
 
-public final synthetic class org/jraf/klibhn/internal/json/JsonComment$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lorg/jraf/klibhn/internal/json/JsonComment$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/jraf/klibhn/internal/json/JsonComment;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/jraf/klibhn/internal/json/JsonComment;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+public abstract interface class org/jraf/klibhn/model/Story$Overview : org/jraf/klibhn/model/Story {
+	public abstract fun getAuthor ()Ljava/lang/String;
+	public abstract fun getCommentCount ()I
+	public abstract fun getCreationDate ()Lkotlin/time/Instant;
+	public abstract fun getId-P1wMUsk ()J
+	public abstract fun getScore ()I
+	public abstract fun getText ()Ljava/lang/String;
+	public abstract fun getTitle ()Ljava/lang/String;
+	public abstract fun getUrl ()Ljava/lang/String;
 }
 
-public final class org/jraf/klibhn/internal/json/JsonComment$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class org/jraf/klibhn/internal/json/JsonStory {
-	public static final field Companion Lorg/jraf/klibhn/internal/json/JsonStory$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/util/List;JJILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/util/List;
-	public final fun component3 ()J
-	public final fun component4 ()J
-	public final fun component5 ()I
-	public final fun component6 ()Ljava/lang/String;
-	public final fun component7 ()Ljava/lang/String;
-	public final fun component8 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/util/List;JJILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/jraf/klibhn/internal/json/JsonStory;
-	public static synthetic fun copy$default (Lorg/jraf/klibhn/internal/json/JsonStory;Ljava/lang/String;Ljava/util/List;JJILjava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/jraf/klibhn/internal/json/JsonStory;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getAuthor ()Ljava/lang/String;
-	public final fun getChildren ()Ljava/util/List;
-	public final fun getCreated_at_i ()J
-	public final fun getId ()J
-	public final fun getPoints ()I
-	public final fun getText ()Ljava/lang/String;
-	public final fun getTitle ()Ljava/lang/String;
-	public final fun getUrl ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class org/jraf/klibhn/internal/json/JsonStory$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lorg/jraf/klibhn/internal/json/JsonStory$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/jraf/klibhn/internal/json/JsonStory;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/jraf/klibhn/internal/json/JsonStory;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class org/jraf/klibhn/internal/json/JsonStory$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class org/jraf/klibhn/model/Comment {
-	public fun <init> (JLkotlin/time/Instant;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)V
-	public final fun component1 ()J
-	public final fun component2 ()Lkotlin/time/Instant;
-	public final fun component3 ()Ljava/lang/String;
-	public final fun component4 ()Ljava/lang/String;
-	public final fun component5 ()Ljava/util/List;
-	public final fun copy (JLkotlin/time/Instant;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)Lorg/jraf/klibhn/model/Comment;
-	public static synthetic fun copy$default (Lorg/jraf/klibhn/model/Comment;JLkotlin/time/Instant;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lorg/jraf/klibhn/model/Comment;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getAuthor ()Ljava/lang/String;
-	public final fun getComments ()Ljava/util/List;
-	public final fun getCreationDate ()Lkotlin/time/Instant;
-	public final fun getId ()J
-	public final fun getText ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/jraf/klibhn/model/Story {
-	public fun <init> (JLkotlin/time/Instant;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/util/List;)V
-	public final fun component1 ()J
-	public final fun component2 ()Lkotlin/time/Instant;
-	public final fun component3 ()Ljava/lang/String;
-	public final fun component4 ()Ljava/lang/String;
-	public final fun component5 ()I
-	public final fun component6 ()Ljava/lang/String;
-	public final fun component7 ()Ljava/lang/String;
-	public final fun component8 ()Ljava/util/List;
-	public final fun copy (JLkotlin/time/Instant;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/util/List;)Lorg/jraf/klibhn/model/Story;
-	public static synthetic fun copy$default (Lorg/jraf/klibhn/model/Story;JLkotlin/time/Instant;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lorg/jraf/klibhn/model/Story;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getAuthor ()Ljava/lang/String;
-	public final fun getComments ()Ljava/util/List;
-	public final fun getCreationDate ()Lkotlin/time/Instant;
-	public final fun getId ()J
-	public final fun getScore ()I
-	public final fun getText ()Ljava/lang/String;
-	public final fun getTitle ()Ljava/lang/String;
-	public final fun getUrl ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
+public abstract interface class org/jraf/klibhn/model/Story$WithComments : org/jraf/klibhn/model/Story {
+	public abstract fun getAuthor ()Ljava/lang/String;
+	public abstract fun getComments ()Ljava/util/List;
+	public abstract fun getCreationDate ()Lkotlin/time/Instant;
+	public abstract fun getId-P1wMUsk ()J
+	public abstract fun getScore ()I
+	public abstract fun getText ()Ljava/lang/String;
+	public abstract fun getTitle ()Ljava/lang/String;
+	public abstract fun getUrl ()Ljava/lang/String;
 }
 

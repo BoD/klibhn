@@ -31,24 +31,32 @@ kotlin {
         // Logging
         implementation(libs.klibnanolog)
 
-
-        implementation("com.jakewharton.mosaic:mosaic-runtime:0.18.0")
+        implementation(libs.mosaic.runtime)
         implementation(libs.jetbrains.androidx.lifecycle.viewmodelCompose)
         implementation(libs.kotlinx.datetime)
+      }
+    }
+
+    jvmMain {
+      dependencies {
+        implementation(libs.logback)
       }
     }
   }
 }
 
-//tasks.withType<Tar> {
-//  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-//}
-//
-//tasks.withType<Zip> {
-//  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-//}
-//
-//tasks.withType<Copy> {
-//  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-//}
-
+// Workaround for `installJvmDist` failing with "Entry lib/lifecycle-runtime-desktop-2.11.0.jar is a duplicate but no duplicate handling
+// strategy has been set".
+// The reason we need this is because `org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose-desktop` (a dependency of mosaic)
+// depends on both `org.jetbrains.androidx.lifecycle:lifecycle-runtime-desktop` and `androidx.lifecycle:lifecycle-runtime-desktop`
+// which produce jars with the same name ¯\_(ツ)_/¯
+tasks.withType<AbstractCopyTask>().configureEach {
+  eachFile {
+    if (
+      file.path.contains("/org.jetbrains.androidx.lifecycle/") &&
+      name.endsWith(".jar")
+    ) {
+      exclude()
+    }
+  }
+}
