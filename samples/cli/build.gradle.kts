@@ -39,6 +39,7 @@ kotlin {
 
     jvmMain {
       dependencies {
+        // Logging
         implementation(libs.logback)
       }
     }

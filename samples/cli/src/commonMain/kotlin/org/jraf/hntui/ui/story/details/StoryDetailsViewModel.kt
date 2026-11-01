@@ -25,7 +25,6 @@
 
 package org.jraf.hntui.ui.story.details
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -33,13 +32,14 @@ import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import org.jraf.hntui.data.HnRepository
+import org.jraf.hntui.util.TuiViewModel
 import org.jraf.klibhn.model.Story
 import kotlin.time.Duration.Companion.seconds
 
 class StoryDetailsViewModel(
   private val hnRepository: HnRepository,
   private val storyId: Story.Id,
-) : ViewModel() {
+) : TuiViewModel() {
   sealed interface UiState {
     object Loading : UiState
     data class Error(val throwable: Throwable) : UiState

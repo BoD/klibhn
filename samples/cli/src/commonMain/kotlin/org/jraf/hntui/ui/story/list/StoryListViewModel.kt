@@ -25,7 +25,6 @@
 
 package org.jraf.hntui.ui.story.list
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,10 +35,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import org.jraf.hntui.data.HnRepository
+import org.jraf.hntui.util.TuiViewModel
 import org.jraf.klibhn.model.Story
 import kotlin.time.Duration.Companion.seconds
 
-class StoryListViewModel(private val hnRepository: HnRepository) : ViewModel() {
+class StoryListViewModel(private val hnRepository: HnRepository) : TuiViewModel() {
   sealed interface UiState {
     object Loading : UiState
     data class Error(val throwable: Throwable) : UiState

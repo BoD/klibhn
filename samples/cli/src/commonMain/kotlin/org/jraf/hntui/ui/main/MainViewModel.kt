@@ -25,12 +25,12 @@
 
 package org.jraf.hntui.ui.main
 
-import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import org.jraf.hntui.util.TuiViewModel
 import org.jraf.klibhn.model.Story
 
-class MainViewModel : ViewModel() {
+class MainViewModel : TuiViewModel() {
   sealed interface UiState {
     object StoryList : UiState
     data class StoryDetails(val id: Story.Id) : UiState

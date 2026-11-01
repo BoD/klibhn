@@ -23,11 +23,16 @@
  * limitations under the License.
  */
 
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.jakewharton.mosaic.runMosaicBlocking
+import org.jraf.hntui.ui.ApplicationViewModelStoreOwner
 import org.jraf.hntui.ui.main.MainScreen
 
 fun main(av: Array<String>) {
   runMosaicBlocking {
-    MainScreen()
+    CompositionLocalProvider(LocalViewModelStoreOwner provides ApplicationViewModelStoreOwner) {
+      MainScreen()
+    }
   }
 }

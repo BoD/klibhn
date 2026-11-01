@@ -26,14 +26,14 @@
 package org.jraf.hntui.ui.main
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jakewharton.mosaic.LocalTerminalState
 import com.jakewharton.mosaic.layout.size
 import com.jakewharton.mosaic.modifier.Modifier
 import com.jakewharton.mosaic.ui.Box
-import org.jraf.hntui.ui.ApplicationViewModelStoreOwner
+import org.jraf.hntui.ui.main.MainViewModel.UiState
 import org.jraf.hntui.ui.story.details.StoryDetailsScreen
 import org.jraf.hntui.ui.story.list.StoryListScreen
 
@@ -46,15 +46,15 @@ fun MainScreen() {
       height = screenSize.rows - 1, // Need to remove 1 because of the cursor which adds a new line
     ),
   ) {
-    val viewModel = viewModel(ApplicationViewModelStoreOwner) { MainViewModel() }
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val viewModel = viewModel { MainViewModel() }
+    val uiState by viewModel.uiState.collectAsState()
 
     when (val uiState = uiState) {
-      is MainViewModel.UiState.StoryList -> StoryListScreen(
+      is UiState.StoryList -> StoryListScreen(
         onSelectStory = { id -> viewModel.selectStory(id) },
       )
 
-      is MainViewModel.UiState.StoryDetails -> StoryDetailsScreen(
+      is UiState.StoryDetails -> StoryDetailsScreen(
         storyId = uiState.id,
         onGoBackToStoryList = { viewModel.goBackToStoryList() },
       )

@@ -28,8 +28,10 @@ package org.jraf.hntui.ui
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 
-// Normally we'd clear the store when we're finished with Mosaic.
-// In practice however, Mosaic terminates when the whole app terminates, so a process lifetime is fine.
+/**
+ * A singleton [ViewModelStoreOwner] for the whole application.
+ * Note: these [androidx.lifecycle.ViewModel]s are never cleared.
+ */
 object ApplicationViewModelStoreOwner : ViewModelStoreOwner {
   override val viewModelStore: ViewModelStore = ViewModelStore()
 }

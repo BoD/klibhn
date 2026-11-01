@@ -26,8 +26,8 @@
 package org.jraf.hntui.ui.story.details
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jakewharton.mosaic.layout.KeyEvent
 import com.jakewharton.mosaic.layout.drawBehind
@@ -53,9 +53,9 @@ import kotlinx.datetime.format.FormatStringsInDatetimeFormats
 import kotlinx.datetime.format.byUnicodePattern
 import kotlinx.datetime.toLocalDateTime
 import org.jraf.hntui.data.HnRepository
-import org.jraf.hntui.ui.ApplicationViewModelStoreOwner
 import org.jraf.hntui.ui.components.Error
 import org.jraf.hntui.ui.components.Loading
+import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.UiState
 import org.jraf.hntui.util.WithConstraints
 import org.jraf.hntui.util.abbreviate
 import org.jraf.hntui.util.htmlToText
@@ -83,23 +83,20 @@ fun StoryDetailsScreen(
         true
       },
   ) {
-    val viewModel = viewModel(
-      viewModelStoreOwner = ApplicationViewModelStoreOwner,
-      key = "StoryDetailsViewModel:$storyId",
-    ) {
+    val viewModel = viewModel(key = "StoryDetailsViewModel:$storyId") {
       StoryDetailsViewModel(hnRepository = HnRepository.instance, storyId = storyId)
     }
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsState()
     when (val uiState = uiState) {
-      StoryDetailsViewModel.UiState.Loading -> {
+      UiState.Loading -> {
         Loading()
       }
 
-      is StoryDetailsViewModel.UiState.Error -> {
+      is UiState.Error -> {
         Error(uiState.throwable)
       }
 
-      is StoryDetailsViewModel.UiState.Content -> {
+      is UiState.Content -> {
           Story(uiState)
       }
     }
@@ -107,7 +104,7 @@ fun StoryDetailsScreen(
 }
 
 @Composable
-private fun Story(content: StoryDetailsViewModel.UiState.Content) {
+private fun Story(content: UiState.Content) {
   val story = content.story
   Column(
     modifier = Modifier.fillMaxSize(),

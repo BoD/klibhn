@@ -25,27 +25,15 @@
 
 package org.jraf.hntui.util
 
+import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.InternalCoroutinesApi
-import kotlinx.coroutines.MainCoroutineDispatcher
-import kotlinx.coroutines.Runnable
-import kotlinx.coroutines.internal.MainDispatcherFactory
-import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.SupervisorJob
 
-class TuiMainCoroutineDispatcher : MainCoroutineDispatcher() {
-  override fun dispatch(context: CoroutineContext, block: Runnable) {
-    Dispatchers.Default.dispatch(context, block)
-  }
-
-  override val immediate: MainCoroutineDispatcher = this
-}
-
-
-@OptIn(InternalCoroutinesApi::class)
-internal class TuiDispatcherFactory : MainDispatcherFactory {
-  override val loadPriority: Int = 0
-
-  override fun createDispatcher(allFactories: List<MainDispatcherFactory>): MainCoroutineDispatcher {
-    return TuiMainCoroutineDispatcher()
-  }
-}
+/**
+ * A ViewModel that uses [Dispatchers.Default] instead of the default [Dispatchers.Main]`.immediate`, which is not available by default on
+ * JVM, available but not processed on Apple targets without UiKit, and not available at all on other native targets.
+ */
+abstract class TuiViewModel : ViewModel(
+  viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+)
