@@ -3,44 +3,44 @@
   <groupId>org.jraf.klibhn</groupId>
   <artifactId>klibhn-macosarm64</artifactId>
   <versioning>
-    <lastUpdated>20261101212237</lastUpdated>
+    <lastUpdated>20261110114543</lastUpdated>
     <snapshot>
-      <timestamp>20261101.212237</timestamp>
+      <timestamp>20261110.114543</timestamp>
       <buildNumber>1</buildNumber>
     </snapshot>
     <snapshotVersions>
       <snapshotVersion>
-        <classifier>javadoc</classifier>
-        <extension>jar</extension>
-        <value>1.0.0-20261101.212237-1</value>
-        <updated>20261101212237</updated>
+        <extension>klib</extension>
+        <value>1.0.0-20261110.114543-1</value>
+        <updated>20261110114543</updated>
       </snapshotVersion>
       <snapshotVersion>
-        <extension>klib</extension>
-        <value>1.0.0-20261101.212237-1</value>
-        <updated>20261101212237</updated>
+        <classifier>javadoc</classifier>
+        <extension>jar</extension>
+        <value>1.0.0-20261110.114543-1</value>
+        <updated>20261110114543</updated>
       </snapshotVersion>
       <snapshotVersion>
         <classifier>sources</classifier>
         <extension>jar</extension>
-        <value>1.0.0-20261101.212237-1</value>
-        <updated>20261101212237</updated>
+        <value>1.0.0-20261110.114543-1</value>
+        <updated>20261110114543</updated>
+      </snapshotVersion>
+      <snapshotVersion>
+        <extension>pom</extension>
+        <value>1.0.0-20261110.114543-1</value>
+        <updated>20261110114543</updated>
+      </snapshotVersion>
+      <snapshotVersion>
+        <extension>module</extension>
+        <value>1.0.0-20261110.114543-1</value>
+        <updated>20261110114543</updated>
       </snapshotVersion>
       <snapshotVersion>
         <classifier>metadata</classifier>
         <extension>jar</extension>
-        <value>1.0.0-20261101.212237-1</value>
-        <updated>20261101212237</updated>
-      </snapshotVersion>
-      <snapshotVersion>
-        <extension>pom</extension>
-        <value>1.0.0-20261101.212237-1</value>
-        <updated>20261101212237</updated>
-      </snapshotVersion>
-      <snapshotVersion>
-        <extension>module</extension>
-        <value>1.0.0-20261101.212237-1</value>
-        <updated>20261101212237</updated>
+        <value>1.0.0-20261110.114543-1</value>
+        <updated>20261110114543</updated>
       </snapshotVersion>
     </snapshotVersions>
   </versioning>
