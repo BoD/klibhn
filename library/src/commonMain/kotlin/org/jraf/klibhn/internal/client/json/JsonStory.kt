@@ -23,7 +23,7 @@
  * limitations under the License.
  */
 
-package org.jraf.klibhn.internal.json
+package org.jraf.klibhn.internal.client.json
 
 import kotlinx.serialization.Serializable
 

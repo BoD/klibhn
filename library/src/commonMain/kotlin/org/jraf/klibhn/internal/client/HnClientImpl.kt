@@ -44,12 +44,8 @@ import kotlinx.serialization.json.Json
 import org.jraf.klibhn.client.HnClient
 import org.jraf.klibhn.client.HnClient.Configuration
 import org.jraf.klibhn.client.HnClient.Configuration.Http.LoggingLevel
-import org.jraf.klibhn.internal.json.JsonComment
-import org.jraf.klibhn.internal.json.JsonStoryOverview
-import org.jraf.klibhn.internal.json.JsonStoryWithComments
-import org.jraf.klibhn.internal.model.CommentImpl
+import org.jraf.klibhn.internal.client.json.JsonStoryOverview
 import org.jraf.klibhn.internal.model.StoryImpl
-import org.jraf.klibhn.model.Comment
 import org.jraf.klibhn.model.Story
 import org.jraf.klibnanolog.logd
 import kotlin.time.ExperimentalTime
@@ -128,7 +124,7 @@ internal class HnClientImpl(
   }
 
   override suspend fun getStoryWithComments(id: Story.Id): Result<Story.WithComments> = runCatching {
-    service.getStoryWithComments(id.id).toStory()
+    service.getStoryWithComments(id.id)
   }
 
   override fun close() {
@@ -150,27 +146,4 @@ private fun JsonStoryOverview.toStoryOverview() = StoryImpl.Overview(
   text = text,
   url = url,
   commentCount = descendants,
-)
-
-private fun JsonStoryWithComments.toStory() = StoryImpl.WithComments(
-  id = Story.Id(id),
-  creationDate = Instant.fromEpochMilliseconds(created_at_i * 1000),
-  title = title,
-  author = author,
-  score = points,
-  text = text,
-  url = url,
-  comments = children.map { jsonComment ->
-    jsonComment.toComment()
-  },
-)
-
-private fun JsonComment.toComment(): Comment = CommentImpl(
-  id = CommentImpl.Id(id),
-  creationDate = Instant.fromEpochMilliseconds(created_at_i * 1000),
-  author = author,
-  text = text,
-  comments = children.map { childJsonComment ->
-    childJsonComment.toComment()
-  },
 )

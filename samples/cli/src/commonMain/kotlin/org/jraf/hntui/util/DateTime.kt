@@ -23,15 +23,21 @@
  * limitations under the License.
  */
 
-package org.jraf.klibhn.internal.json
+package org.jraf.hntui.util
 
-import kotlinx.serialization.Serializable
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format
+import kotlinx.datetime.format.FormatStringsInDatetimeFormats
+import kotlinx.datetime.format.byUnicodePattern
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Instant
 
-@Serializable
-internal data class JsonComment(
-  val author: String,
-  val children: List<JsonComment>,
-  val created_at_i: Long,
-  val id: Long,
-  val text: String,
-)
+@OptIn(FormatStringsInDatetimeFormats::class)
+fun Instant.formatted(): String {
+  return toLocalDateTime(TimeZone.currentSystemDefault()).format(
+    LocalDateTime.Format {
+      byUnicodePattern("uuuu-MM-dd HH:mm")
+    },
+  )
+}

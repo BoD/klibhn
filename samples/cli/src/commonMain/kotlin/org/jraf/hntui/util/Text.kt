@@ -69,7 +69,7 @@ private fun String.split(maxWidth: Int, firstLineMaxWidth: Int): List<String> {
   return lines
 }
 
-fun List<String>.wrapped(maxLength: Int): List<String> = flatMap { it.wrapped(maxLength) }
+fun List<String>.wrapped(maxWidth: Int): List<String> = flatMap { it.wrapped(maxWidth) }
 
 fun String.wrapped(maxWidth: Int): List<String> {
   if (length <= maxWidth) {
@@ -118,4 +118,8 @@ fun String.htmlToText(): String {
     .replace(Regex("<br\\s*/?>"), "\n")
     .replace(Regex("<p\\s*/?>"), "\n\n")
     .replace(Regex("<[^>]+>"), "")
+}
+
+fun String.htmlWrapped(maxWidth: Int): List<String> {
+  return htmlToText().split("\n").wrapped(maxWidth)
 }

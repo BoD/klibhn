@@ -10,6 +10,9 @@ kotlinx-datetime = "0.8.0"
 konsist = "0.18.1"
 mosaic = "0.18.0"
 logback = "1.6.5"
+coroutines = "1.11.0"
+kotlinx-io = "0.9.2"
+klibregexdsl = "1.1.0"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -33,3 +36,6 @@ kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime",
 konsist = { group = "com.lemonappdev", name = "konsist", version.ref = "konsist" }
 mosaic-runtime = { group = "com.jakewharton.mosaic", name = "mosaic-runtime", version.ref = "mosaic" }
 logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-io-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-io-core", version.ref = "kotlinx-io" }
+klibregexdsl = { group = "org.jraf.klibregexdsl", name = "klibregexdsl", version.ref = "klibregexdsl" }

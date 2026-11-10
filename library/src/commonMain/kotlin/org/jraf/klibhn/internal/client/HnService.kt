@@ -28,16 +28,19 @@ package org.jraf.klibhn.internal.client
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
-import org.jraf.klibhn.internal.json.JsonStoryWithComments
-import org.jraf.klibhn.internal.json.JsonStoryOverview
+import org.jraf.klibhn.internal.client.html.HnHtmlParser
+import org.jraf.klibhn.internal.client.json.JsonStoryOverview
+import org.jraf.klibhn.model.Story
 
 internal class HnService(
   private val httpClient: HttpClient,
 ) : AutoCloseable {
   private companion object {
     const val URL_BASE_FIREBASE = "https://hacker-news.firebaseio.com/v0"
-    const val URL_BASE_ALGOLIA = "https://hn.algolia.com/api/v1"
+    const val URL_BASE_YCOMBINATOR = "https://news.ycombinator.com"
   }
+
+  private val parser by lazy { HnHtmlParser() }
 
   suspend fun getBestStoryIds(): List<Long> {
     return httpClient.get("$URL_BASE_FIREBASE/beststories.json").body()
@@ -47,8 +50,9 @@ internal class HnService(
     return httpClient.get("$URL_BASE_FIREBASE/item/$id.json").body()
   }
 
-  suspend fun getStoryWithComments(id: Long): JsonStoryWithComments {
-    return httpClient.get("$URL_BASE_ALGOLIA/items/$id").body()
+  suspend fun getStoryWithComments(id: Long): Story.WithComments {
+    val htmlStr: String = httpClient.get("$URL_BASE_YCOMBINATOR/item?id=$id").body()
+    return parser.parseStoryWithComments(htmlStr)
   }
 
   override fun close() {

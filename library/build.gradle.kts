@@ -22,8 +22,18 @@ kotlin {
         // Serialization
         implementation(libs.kotlinx.serialization.json)
 
+        // Regex
+        implementation(libs.klibregexdsl)
+
         // Logging
         implementation(libs.klibnanolog)
+      }
+    }
+
+    commonTest {
+      dependencies {
+        implementation(kotlin("test"))
+        implementation(libs.kotlinx.io.core)
       }
     }
 

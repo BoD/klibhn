@@ -26,7 +26,6 @@
 package org.jraf.klibhn.internal.model
 
 import org.jraf.klibhn.model.Comment
-import kotlin.jvm.JvmInline
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -36,10 +35,5 @@ internal data class CommentImpl(
   override val creationDate: Instant,
   override val author: String,
   override val text: String,
-  override val comments: List<Comment>,
-) : Comment {
-  @JvmInline
-  internal value class Id(
-    internal val id: Long,
-  ) : Comment.Id
-}
+  override var comments: List<Comment>,
+) : Comment

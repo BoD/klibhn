@@ -23,18 +23,15 @@
  * limitations under the License.
  */
 
-package org.jraf.klibhn.internal.json
+package org.jraf.klibhn.internal.client.json
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class JsonStoryWithComments(
-  val author: String,
-  val children: List<JsonComment>,
-  val created_at_i: Long,
+internal data class JsonComment(
+  val by: String? = null,
   val id: Long,
-  val points: Int,
-  val text: String?,
-  val title: String,
-  val url: String?,
+  val kids: List<Long>? = null,
+  val text: String? = null,
+  val time: Long,
 )

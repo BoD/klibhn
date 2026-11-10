@@ -23,12 +23,14 @@
  * limitations under the License.
  */
 
+@file:OptIn(ExperimentalTime::class)
+
 package org.jraf.klibhn.model
 
+import kotlin.jvm.JvmInline
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-@OptIn(ExperimentalTime::class)
 interface Comment {
   val id: Id
   val creationDate: Instant
@@ -36,5 +38,8 @@ interface Comment {
   val text: String
   val comments: List<Comment>
 
-  interface Id
+  @JvmInline
+  value class Id(
+    internal val id: Long,
+  )
 }

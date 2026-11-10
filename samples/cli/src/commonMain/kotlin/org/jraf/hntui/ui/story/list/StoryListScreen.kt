@@ -30,7 +30,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.jakewharton.mosaic.layout.KeyEvent
 import com.jakewharton.mosaic.layout.fillMaxSize
 import com.jakewharton.mosaic.layout.onKeyEvent
 import com.jakewharton.mosaic.modifier.Modifier
@@ -45,30 +44,26 @@ import org.jraf.hntui.data.HnRepository
 import org.jraf.hntui.ui.components.Error
 import org.jraf.hntui.ui.components.Loading
 import org.jraf.hntui.ui.story.list.StoryListViewModel.UiState
+import org.jraf.hntui.util.ArrowDown
+import org.jraf.hntui.util.ArrowUp
+import org.jraf.hntui.util.Enter
 import org.jraf.hntui.util.WithConstraints
 import org.jraf.hntui.util.abbreviate
 import org.jraf.klibhn.model.Story
-
-//private val Escape = KeyEvent("Escape")
-private val ArrowUp = KeyEvent("ArrowUp")
-private val ArrowDown = KeyEvent("ArrowDown")
-private val Enter = KeyEvent("Enter")
 
 @Composable
 fun StoryListScreen(
   onSelectStory: (Story.Id) -> Unit,
 ) {
+  val viewModel = viewModel { StoryListViewModel(HnRepository.instance) }
   WithConstraints(modifier = Modifier.fillMaxSize()) { constraints ->
     val availableHeight = constraints.maxHeight
     val availableWidth = constraints.maxWidth
-
-    val viewModel = viewModel { StoryListViewModel(HnRepository.instance) }
     LaunchedEffect(availableHeight) {
       viewModel.setScreenHeight(availableHeight)
     }
 
     val uiState by viewModel.uiState.collectAsState()
-
     when (val uiState = uiState) {
       UiState.Loading -> {
         Loading()

@@ -71,7 +71,7 @@ class StoryListViewModel(private val hnRepository: HnRepository) : TuiViewModel(
     )
   }
 
-  private var storyOverViews = emptyList<Story.Overview>()
+  private var storyOverViews = emptyList<Story>()
 
   val uiState: StateFlow<UiState> = combine(
     storyIds,
