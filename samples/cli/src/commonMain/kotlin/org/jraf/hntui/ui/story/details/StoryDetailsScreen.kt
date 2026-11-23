@@ -50,8 +50,13 @@ import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.UiState
 import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.UiState.Content.UiComment
 import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.UiState.Content.UiStory
 import org.jraf.hntui.util.ArrowDown
+import org.jraf.hntui.util.ArrowLeft
+import org.jraf.hntui.util.ArrowRight
 import org.jraf.hntui.util.ArrowUp
+import org.jraf.hntui.util.Equals
 import org.jraf.hntui.util.Escape
+import org.jraf.hntui.util.Minus
+import org.jraf.hntui.util.Plus
 import org.jraf.hntui.util.WithConstraints
 import org.jraf.hntui.util.abbreviate
 import org.jraf.hntui.util.formatted
@@ -86,6 +91,10 @@ fun StoryDetailsScreen(
 
             ArrowDown -> {
               viewModel.focusDown()
+            }
+
+            ArrowLeft, ArrowRight, Minus, Plus, Equals -> {
+              viewModel.collapseOrExpandFocusedComment()
             }
 
             else -> return@onKeyEvent false
@@ -125,30 +134,42 @@ private fun Story(
   Column(
     modifier = Modifier.fillMaxSize(),
   ) {
-    val lines = story.toHeaderAnnotatedString(
+    val header = story.toHeaderAnnotatedString(
       availableWidth = availableWidth,
-      commentCount = content.comments.size,
-    ) + content.comments.flatMap { comment ->
-      comment.toAnnotatedString(availableWidth, isFocused = comment.id == content.focusedCommentId)
+      commentCount = content.totalCommentCount,
+    )
+    val totalLineCount = header.size + content.comments.sumOf { it.lineCount }
+    val start = content.scroll
+    val end = (content.scroll + availableHeight).coerceAtMost(totalLineCount)
+
+    val lines = mutableListOf<AnnotatedString>()
+    var lineIndex = 0
+    for (headerLine in header) {
+      if (lineIndex in start..<end) lines += headerLine
+      lineIndex++
     }
-    for (line in lines.slice(content.scroll..<(content.scroll + availableHeight).coerceAtMost(lines.lastIndex))) {
+    for (comment in content.comments) {
+      if (lineIndex >= end) break
+      val commentLineCount = comment.lineCount
+      // Only build the comments that overlap the visible range
+      if (lineIndex + commentLineCount > start) {
+        val commentLines = comment.toAnnotatedString(availableWidth, isFocused = comment.id == content.focusedCommentId)
+        for ((i, commentLine) in commentLines.withIndex()) {
+          if (lineIndex + i in start..<end) lines += commentLine
+        }
+      }
+      lineIndex += commentLineCount
+    }
+    for (line in lines) {
       Text(line)
     }
   }
 }
 
+private val UiComment.lineCount: Int get() = 1 + textLines.size
+
 private fun UiStory.toHeaderAnnotatedString(availableWidth: Int, commentCount: Int): List<AnnotatedString> {
   return buildList {
-    for (titleLine in titleLines) {
-      add(
-        AnnotatedString(titleLine, SpanStyle(textStyle = TextStyle.Bold)),
-      )
-    }
-    for (urlLine in urlLines) {
-      add(
-        AnnotatedString(urlLine, SpanStyle(underlineStyle = UnderlineStyle.Straight)),
-      )
-    }
     add(
       buildAnnotatedString {
         withStyle(SpanStyle(color = Color.Cyan)) {
@@ -170,6 +191,16 @@ private fun UiStory.toHeaderAnnotatedString(availableWidth: Int, commentCount: I
         }
       }.abbreviate(availableWidth),
     )
+    for (titleLine in titleLines) {
+      add(
+        AnnotatedString(titleLine, SpanStyle(textStyle = TextStyle.Bold)),
+      )
+    }
+    for (urlLine in urlLines) {
+      add(
+        AnnotatedString(urlLine, SpanStyle(underlineStyle = UnderlineStyle.Straight)),
+      )
+    }
     for (textLine in textLines) {
       add(
         AnnotatedString.Builder(textLine).toAnnotatedString(),
@@ -201,9 +232,16 @@ private fun UiComment.toAnnotatedString(availableWidth: Int, isFocused: Boolean)
           withStyle(SpanStyle(color = Color.Magenta)) {
             append(author)
           }
+          val collapsed = " (collapsed)"
+          if (isCollapsed) {
+            withStyle(SpanStyle(color = Color.Green)) {
+              append(collapsed)
+            }
+          }
 
           if (isFocused) {
-            val padding = availableWidth - creationDate.length - 1 - author.length - indent.length
+            val padding =
+              availableWidth - creationDate.length - 1 - author.length - indent.length - if (isCollapsed) collapsed.length else 0
             if (padding > 0) {
               append(" ".repeat(padding))
             }

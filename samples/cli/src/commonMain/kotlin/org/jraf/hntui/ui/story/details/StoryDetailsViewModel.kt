@@ -54,10 +54,12 @@ class StoryDetailsViewModel(
     data class Content(
       val screenDimensions: Pair<Int, Int>,
       val story: Story.WithComments,
+      val totalCommentCount: Int,
       val uiStory: UiStory,
       val uiComments: List<UiComment>,
       val focusedCommentId: Comment.Id?,
       val scroll: Int,
+      val collapsedCommentIds: Set<Comment.Id>,
     ) : InternalState
   }
 
@@ -67,6 +69,7 @@ class StoryDetailsViewModel(
     data class Content(
       val story: UiStory,
       val comments: List<UiComment>,
+      val totalCommentCount: Int,
       val focusedCommentId: Comment.Id?,
       val scroll: Int,
     ) : UiState {
@@ -86,11 +89,14 @@ class StoryDetailsViewModel(
         val author: String,
         val indent: Int,
         val textLines: List<String>,
+        val isCollapsed: Boolean,
+        val hasChildren: Boolean,
       )
     }
   }
 
   private val internalState = MutableStateFlow<InternalState>(InternalState.Loading)
+
   val uiState: StateFlow<UiState> = internalState.map { internalState ->
     when (internalState) {
       is InternalState.Loading -> UiState.Loading
@@ -99,6 +105,7 @@ class StoryDetailsViewModel(
         UiState.Content(
           story = internalState.uiStory,
           comments = internalState.uiComments,
+          totalCommentCount = internalState.totalCommentCount,
           focusedCommentId = internalState.focusedCommentId,
           scroll = internalState.scroll,
         )
@@ -118,10 +125,13 @@ class StoryDetailsViewModel(
 
       is InternalState.Content -> {
         val state = internalState.value as InternalState.Content
+        if (state.screenDimensions.first == width && state.screenDimensions.second == height) {
+          return
+        }
         internalState.value = state.copy(
           screenDimensions = width to height,
           uiStory = state.story.toUiStory(width),
-          uiComments = state.story.toUiComments(width),
+          uiComments = state.story.toUiComments(maxWidth = width, collapsedCommentIds = state.collapsedCommentIds),
           scroll = adjustScroll(state, state.focusedCommentId),
         )
 
@@ -136,10 +146,12 @@ class StoryDetailsViewModel(
           internalState.value = InternalState.Content(
             screenDimensions = width to height,
             story = story,
+            totalCommentCount = story.totalCommentCount(),
             uiStory = story.toUiStory(width),
-            uiComments = story.toUiComments(width),
+            uiComments = story.toUiComments(maxWidth = width, collapsedCommentIds = emptySet()),
             focusedCommentId = story.comments.firstOrNull()?.id,
             scroll = 0,
+            collapsedCommentIds = emptySet(),
           )
         }
       }
@@ -156,9 +168,10 @@ class StoryDetailsViewModel(
     urlLines = url?.wrapped(maxWidth = maxWidth) ?: emptyList(),
   )
 
-  private fun Story.WithComments.toUiComments(maxWidth: Int): List<UiComment> {
+  private fun Story.WithComments.toUiComments(maxWidth: Int, collapsedCommentIds: Set<Comment.Id>): List<UiComment> {
     return buildList {
       fun addComment(comment: Comment, indent: Int) {
+        val isCollapsed = comment.id in collapsedCommentIds
         add(
           UiComment(
             id = comment.id,
@@ -166,10 +179,14 @@ class StoryDetailsViewModel(
             author = comment.author,
             indent = indent,
             textLines = comment.text.htmlWrapped(maxWidth = maxWidth - indent * 2),
+            isCollapsed = isCollapsed,
+            hasChildren = comment.comments.isNotEmpty(),
           ),
         )
-        for (comment in comment.comments) {
-          addComment(comment, indent + 1)
+        if (!isCollapsed) {
+          for (comment in comment.comments) {
+            addComment(comment, indent + 1)
+          }
         }
       }
       for (comment in comments) {
@@ -177,6 +194,19 @@ class StoryDetailsViewModel(
       }
     }
   }
+
+  private fun Story.WithComments.totalCommentCount(): Int {
+    var count = 0
+    fun countComments(comments: List<Comment>) {
+      for (comment in comments) {
+        count++
+        countComments(comment.comments)
+      }
+    }
+    countComments(comments)
+    return count
+  }
+
 
   fun focusUp() {
     val state = internalState.value as? InternalState.Content ?: return
@@ -204,11 +234,33 @@ class StoryDetailsViewModel(
     )
   }
 
+  fun collapseOrExpandFocusedComment() {
+    val state = internalState.value as? InternalState.Content ?: return
+    val focusedCommentId = state.focusedCommentId ?: return
+    val isCollapsed = focusedCommentId in state.collapsedCommentIds
+    val newCollapsedCommentIds = if (isCollapsed) {
+      state.collapsedCommentIds - focusedCommentId
+    } else {
+      val focusedComment = state.uiComments.firstOrNull { it.id == focusedCommentId }!!
+      if (!focusedComment.hasChildren) return
+      state.collapsedCommentIds + focusedCommentId
+    }
+    internalState.value = state.copy(
+      uiComments = state.story.toUiComments(maxWidth = state.screenDimensions.first, collapsedCommentIds = newCollapsedCommentIds),
+      collapsedCommentIds = newCollapsedCommentIds,
+      scroll = adjustScroll(state, focusedCommentId),
+    )
+  }
+
   private fun adjustScroll(
     state: InternalState.Content,
     newFocusedCommentId: Comment.Id?,
   ): Int {
     if (newFocusedCommentId == null) return 0
+    if (newFocusedCommentId == state.uiComments.first().id) {
+      // If the new focused comment is the first one, scroll to the top
+      return 0
+    }
     var totalHeightWithoutLastComment = state.uiStory.titleLines.size + state.uiStory.urlLines.size + state.uiStory.textLines.size + 1
     var totalHeightWithLastComment = totalHeightWithoutLastComment
     for (comment in state.uiComments) {
@@ -218,12 +270,7 @@ class StoryDetailsViewModel(
     }
     val scroll = state.scroll
     return if (totalHeightWithoutLastComment < scroll) {
-      if (newFocusedCommentId == state.uiComments.first().id) {
-        // If the new focused comment is the first one, scroll to the top
-        0
-      } else {
-        totalHeightWithoutLastComment
-      }
+      totalHeightWithoutLastComment
     } else {
       val screenHeight = state.screenDimensions.second
       if (totalHeightWithLastComment - scroll > screenHeight) {
