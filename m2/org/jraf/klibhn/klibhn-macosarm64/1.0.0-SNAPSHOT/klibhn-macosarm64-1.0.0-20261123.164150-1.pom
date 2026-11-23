@@ -69,7 +69,7 @@
     <dependency>
       <groupId>org.jetbrains.kotlinx</groupId>
       <artifactId>kotlinx-serialization-json-macosarm64</artifactId>
-      <version>1.12.0</version>
+      <version>1.13.0</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

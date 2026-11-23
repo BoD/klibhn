@@ -11,7 +11,7 @@
   },
   "createdBy": {
     "gradle": {
-      "version": "9.8.2"
+      "version": "9.9.2"
     }
   },
   "variants": [
@@ -101,7 +101,7 @@
           "group": "org.jetbrains.kotlinx",
           "module": "kotlinx-serialization-json",
           "version": {
-            "requires": "1.12.0"
+            "requires": "1.13.0"
           }
         },
         {
