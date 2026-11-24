@@ -55,10 +55,7 @@ import org.jraf.hntui.util.ArrowLeft
 import org.jraf.hntui.util.ArrowRight
 import org.jraf.hntui.util.ArrowUp
 import org.jraf.hntui.util.Dimensions
-import org.jraf.hntui.util.Equals
 import org.jraf.hntui.util.Escape
-import org.jraf.hntui.util.Minus
-import org.jraf.hntui.util.Plus
 import org.jraf.hntui.util.WithConstraints
 import org.jraf.hntui.util.abbreviate
 import org.jraf.hntui.util.formattedRelative
@@ -88,15 +85,19 @@ fun StoryDetailsScreen(
             }
 
             ArrowUp -> {
-              viewModel.focusUp()
+              viewModel.onUpKeyPressed()
             }
 
             ArrowDown -> {
-              viewModel.focusDown()
+              viewModel.onDownKeyPressed()
             }
 
-            ArrowLeft, ArrowRight, Minus, Plus, Equals -> {
-              viewModel.collapseOrExpandFocusedComment()
+            ArrowLeft -> {
+              viewModel.onLeftKeyPressed()
+            }
+
+            ArrowRight -> {
+              viewModel.onRightKeyPressed()
             }
 
             else -> return@onKeyEvent false
