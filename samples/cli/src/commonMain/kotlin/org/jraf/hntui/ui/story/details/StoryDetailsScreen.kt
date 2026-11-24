@@ -46,6 +46,7 @@ import com.jakewharton.mosaic.ui.UnderlineStyle
 import org.jraf.hntui.data.HnRepository
 import org.jraf.hntui.ui.components.Error
 import org.jraf.hntui.ui.components.Loading
+import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.Companion.INDENT_WIDTH
 import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.UiState
 import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.UiState.Content.UiComment
 import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.UiState.Content.UiStory
@@ -53,6 +54,7 @@ import org.jraf.hntui.util.ArrowDown
 import org.jraf.hntui.util.ArrowLeft
 import org.jraf.hntui.util.ArrowRight
 import org.jraf.hntui.util.ArrowUp
+import org.jraf.hntui.util.Dimensions
 import org.jraf.hntui.util.Equals
 import org.jraf.hntui.util.Escape
 import org.jraf.hntui.util.Minus
@@ -74,7 +76,7 @@ fun StoryDetailsScreen(
     val availableHeight = constraints.maxHeight
     val availableWidth = constraints.maxWidth
     LaunchedEffect(constraints) {
-      viewModel.setScreenDimensions(availableWidth, availableHeight)
+      viewModel.setScreenDimensions(Dimensions(availableWidth, availableHeight))
     }
     Box(
       modifier = Modifier
@@ -206,7 +208,7 @@ private fun UiStory.toHeaderAnnotatedString(availableWidth: Int, commentCount: I
 }
 
 private fun UiComment.toAnnotatedString(availableWidth: Int, isFocused: Boolean): List<AnnotatedString> {
-  val indent = "  ".repeat(indent)
+  val indent = " ".repeat(indent * INDENT_WIDTH)
   return buildList {
     val creationDate = creationDate.formattedRelative()
     // Header line

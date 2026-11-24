@@ -36,6 +36,7 @@ import kotlinx.coroutines.launch
 import org.jraf.hntui.data.HnRepository
 import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.UiState.Content.UiComment
 import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.UiState.Content.UiStory
+import org.jraf.hntui.util.Dimensions
 import org.jraf.hntui.util.TuiViewModel
 import org.jraf.hntui.util.htmlWrapped
 import org.jraf.hntui.util.wrapped
@@ -44,15 +45,22 @@ import org.jraf.klibhn.model.Story
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
+private const val MAX_COMMENT_WIDTH = 120
+private const val SCROLL_ADDITIONAL_MARGIN = 10
+
 class StoryDetailsViewModel(
   private val hnRepository: HnRepository,
   private val storyId: Story.Id,
 ) : TuiViewModel() {
+  companion object {
+    const val INDENT_WIDTH = 2
+  }
+
   sealed interface InternalState {
     object Loading : InternalState
     data class Error(val throwable: Throwable) : InternalState
     data class Content(
-      val screenDimensions: Pair<Int, Int>,
+      val screenDimensions: Dimensions,
       val story: Story.WithComments,
       val totalCommentCount: Int,
       val uiStory: UiStory,
@@ -119,7 +127,7 @@ class StoryDetailsViewModel(
     initialValue = UiState.Loading,
   )
 
-  fun setScreenDimensions(width: Int, height: Int) {
+  fun setScreenDimensions(dimensions: Dimensions) {
     when (internalState.value) {
       is InternalState.Error -> {
         return
@@ -127,14 +135,14 @@ class StoryDetailsViewModel(
 
       is InternalState.Content -> {
         val state = internalState.value as InternalState.Content
-        if (state.screenDimensions.first == width && state.screenDimensions.second == height) {
+        if (state.screenDimensions == dimensions) {
           return
         }
         internalState.value = state.copy(
-          screenDimensions = width to height,
-          uiStory = state.story.toUiStory(width),
+          screenDimensions = dimensions,
+          uiStory = state.story.toUiStory(dimensions.width),
           uiComments = state.story.toUiComments(
-            maxWidth = width,
+            maxWidth = dimensions.width,
             collapsedCommentIds = state.collapsedCommentIds,
             readCommentIds = state.readCommentIds,
           ),
@@ -153,11 +161,15 @@ class StoryDetailsViewModel(
           // Collapse all comments by default
           val collapsedCommentIds = story.allCollapsedCommentIds()
           internalState.value = InternalState.Content(
-            screenDimensions = width to height,
+            screenDimensions = dimensions,
             story = story,
             totalCommentCount = story.totalCommentCount(),
-            uiStory = story.toUiStory(width),
-            uiComments = story.toUiComments(maxWidth = width, collapsedCommentIds = collapsedCommentIds, readCommentIds = readCommentIds),
+            uiStory = story.toUiStory(dimensions.width),
+            uiComments = story.toUiComments(
+              maxWidth = dimensions.width,
+              collapsedCommentIds = collapsedCommentIds,
+              readCommentIds = readCommentIds,
+            ),
             focusedCommentId = story.comments.firstOrNull()?.id,
             scroll = 0,
             collapsedCommentIds = collapsedCommentIds,
@@ -206,7 +218,7 @@ class StoryDetailsViewModel(
             creationDate = comment.creationDate,
             author = comment.author,
             indent = indent,
-            textLines = comment.text.htmlWrapped(maxWidth = maxWidth - indent * 2),
+            textLines = comment.text.htmlWrapped(maxWidth = (maxWidth - indent * INDENT_WIDTH).coerceAtMost(MAX_COMMENT_WIDTH)),
             isCollapsed = isCollapsed,
             childCount = comment.comments.size,
             isRead = comment.id in readCommentIds,
@@ -247,7 +259,7 @@ class StoryDetailsViewModel(
     val readCommentIds = state.readCommentIds + newFocusedCommentId
     internalState.value = state.copy(
       uiComments = state.story.toUiComments(
-        maxWidth = state.screenDimensions.first,
+        maxWidth = state.screenDimensions.width,
         collapsedCommentIds = state.collapsedCommentIds,
         readCommentIds = readCommentIds,
       ),
@@ -267,7 +279,7 @@ class StoryDetailsViewModel(
     val readCommentIds = state.readCommentIds + newFocusedCommentId
     internalState.value = state.copy(
       uiComments = state.story.toUiComments(
-        maxWidth = state.screenDimensions.first,
+        maxWidth = state.screenDimensions.width,
         collapsedCommentIds = state.collapsedCommentIds,
         readCommentIds = readCommentIds,
       ),
@@ -290,7 +302,7 @@ class StoryDetailsViewModel(
     }
     internalState.value = state.copy(
       uiComments = state.story.toUiComments(
-        maxWidth = state.screenDimensions.first,
+        maxWidth = state.screenDimensions.width,
         collapsedCommentIds = newCollapsedCommentIds,
         readCommentIds = state.readCommentIds,
       ),
@@ -320,7 +332,7 @@ class StoryDetailsViewModel(
     return if (totalHeightUntilFocusedCommentExcluded - SCROLL_ADDITIONAL_MARGIN < scroll) {
       (totalHeightUntilFocusedCommentExcluded - SCROLL_ADDITIONAL_MARGIN).coerceAtLeast(0)
     } else {
-      val screenHeight = state.screenDimensions.second
+      val screenHeight = state.screenDimensions.height
       if (totalHeightUntilFocusedCommentIncluded - scroll + SCROLL_ADDITIONAL_MARGIN > screenHeight) {
         (totalHeightUntilFocusedCommentIncluded - screenHeight + SCROLL_ADDITIONAL_MARGIN)
       } else {
@@ -329,5 +341,3 @@ class StoryDetailsViewModel(
     }
   }
 }
-
-private const val SCROLL_ADDITIONAL_MARGIN = 10

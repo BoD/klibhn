@@ -76,6 +76,7 @@ fun String.wrapped(maxWidth: Int): List<String> {
     return listOf(this)
   }
   val isQuote = startsWith(">")
+  val isListItem = startsWith("- ")
   val lines = mutableListOf<String>()
   val words = split(" ").toMutableList()
   var currentLine = ""
@@ -92,7 +93,7 @@ fun String.wrapped(maxWidth: Int): List<String> {
         continue
       } else {
         lines.add(currentLine)
-        currentLine = if (isQuote) "> $word" else word
+        currentLine = if (isQuote) "> $word" else if (isListItem) "  $word" else word
       }
     } else {
       currentLine = newLine
