@@ -59,7 +59,7 @@ import org.jraf.hntui.util.Minus
 import org.jraf.hntui.util.Plus
 import org.jraf.hntui.util.WithConstraints
 import org.jraf.hntui.util.abbreviate
-import org.jraf.hntui.util.formatted
+import org.jraf.hntui.util.formattedRelative
 import org.jraf.klibhn.model.Story
 
 @Composable
@@ -166,20 +166,20 @@ private fun Story(
   }
 }
 
-private val UiComment.lineCount: Int get() = 1 + textLines.size
+private val UiComment.lineCount: Int get() = 1 + textLines.size + 1
 
 private fun UiStory.toHeaderAnnotatedString(availableWidth: Int, commentCount: Int): List<AnnotatedString> {
   return buildList {
     add(
       buildAnnotatedString {
-        withStyle(SpanStyle(color = Color.Cyan)) {
-          append(
-            creationDate.formatted(),
-          )
-        }
-        append(' ')
         withStyle(SpanStyle(color = Color.Magenta)) {
           append(author)
+        }
+        append(' ')
+        withStyle(SpanStyle(color = Color.Cyan)) {
+          append(
+            creationDate.formattedRelative(),
+          )
         }
         append(' ')
         withStyle(SpanStyle(color = Color.Red)) {
@@ -192,56 +192,59 @@ private fun UiStory.toHeaderAnnotatedString(availableWidth: Int, commentCount: I
       }.abbreviate(availableWidth),
     )
     for (titleLine in titleLines) {
-      add(
-        AnnotatedString(titleLine, SpanStyle(textStyle = TextStyle.Bold)),
-      )
+      add(AnnotatedString(titleLine, SpanStyle(textStyle = TextStyle.Bold)))
     }
     for (urlLine in urlLines) {
-      add(
-        AnnotatedString(urlLine, SpanStyle(underlineStyle = UnderlineStyle.Straight)),
-      )
+      add(AnnotatedString(urlLine, SpanStyle(underlineStyle = UnderlineStyle.Straight)))
     }
     for (textLine in textLines) {
-      add(
-        AnnotatedString.Builder(textLine).toAnnotatedString(),
-      )
+      add(AnnotatedString(textLine, SpanStyle(textStyle = if (textLine.startsWith(">")) TextStyle.Italic else TextStyle.Unspecified)))
     }
+    // Empty line
+    add(AnnotatedString.Builder("").toAnnotatedString())
   }
 }
 
 private fun UiComment.toAnnotatedString(availableWidth: Int, isFocused: Boolean): List<AnnotatedString> {
   val indent = "  ".repeat(indent)
   return buildList {
-    val creationDate = creationDate.formatted()
+    val creationDate = creationDate.formattedRelative()
+    // Header line
     add(
       buildAnnotatedString {
         withStyle(
           SpanStyle(
-            background = if (isFocused) {
-              Color(.25f, .25f, .25f)
-            } else {
-              Color.Unspecified
-            },
+            textStyle = if (isFocused) TextStyle.Invert else TextStyle.Unspecified,
           ),
         ) {
           append(indent)
-          withStyle(SpanStyle(color = Color.Cyan)) {
-            append(creationDate)
-          }
-          append(' ')
           withStyle(SpanStyle(color = Color.Magenta)) {
             append(author)
           }
-          val collapsed = " (collapsed)"
+          append(' ')
+          withStyle(SpanStyle(color = Color.Cyan)) {
+            append(creationDate)
+          }
+          val collapsed = "[$childCount]"
           if (isCollapsed) {
+            append(' ')
             withStyle(SpanStyle(color = Color.Green)) {
               append(collapsed)
             }
           }
+          val unread = "*"
+          if (!isRead) {
+            append(' ')
+            withStyle(SpanStyle(color = Color.Yellow, textStyle = TextStyle.Bold)) {
+              append(unread)
+            }
+          }
 
           if (isFocused) {
-            val padding =
-              availableWidth - creationDate.length - 1 - author.length - indent.length - if (isCollapsed) collapsed.length else 0
+            val padding = availableWidth - indent.length -
+              author.length - 1 -
+              creationDate.length - (if (isCollapsed) 1 + collapsed.length else 0) -
+              (if (!isRead) 1 + unread.length else 0)
             if (padding > 0) {
               append(" ".repeat(padding))
             }
@@ -250,16 +253,14 @@ private fun UiComment.toAnnotatedString(availableWidth: Int, isFocused: Boolean)
       }.abbreviate(maxLength = availableWidth),
     )
 
+    // Text lines
     for (textLine in textLines) {
       add(
         buildAnnotatedString {
           withStyle(
             SpanStyle(
-              background = if (isFocused) {
-                Color(.25f, .25f, .25f)
-              } else {
-                Color.Unspecified
-              },
+              textStyle = (if (textLine.startsWith(">")) TextStyle.Italic else TextStyle.Unspecified) +
+                if (isFocused) TextStyle.Invert else TextStyle.Unspecified,
             ),
           ) {
             append(indent)
@@ -274,5 +275,8 @@ private fun UiComment.toAnnotatedString(availableWidth: Int, isFocused: Boolean)
         },
       )
     }
+
+    // Separator line
+    add(AnnotatedString.Builder("").toAnnotatedString())
   }
 }

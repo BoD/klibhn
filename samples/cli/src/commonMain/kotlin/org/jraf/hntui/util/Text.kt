@@ -75,6 +75,7 @@ fun String.wrapped(maxWidth: Int): List<String> {
   if (length <= maxWidth) {
     return listOf(this)
   }
+  val isQuote = startsWith(">")
   val lines = mutableListOf<String>()
   val words = split(" ").toMutableList()
   var currentLine = ""
@@ -91,7 +92,7 @@ fun String.wrapped(maxWidth: Int): List<String> {
         continue
       } else {
         lines.add(currentLine)
-        currentLine = word
+        currentLine = if (isQuote) "> $word" else word
       }
     } else {
       currentLine = newLine
@@ -116,7 +117,10 @@ fun String.htmlToText(): String {
     .replace("&#x3C;", "<")
     .replace("&#x3E;", ">")
     .replace(Regex("<br\\s*/?>"), "\n")
-    .replace(Regex("<p\\s*/?>"), "\n\n")
+    .replace(Regex("<p\\s*/?>"), "\n")
+    .replace(Regex("<a\\s+href=\"([^\"]+)\"[^>]*>(.*?)</a>")) { matchResult ->
+      matchResult.groupValues[1]
+    }
     .replace(Regex("<[^>]+>"), "")
 }
 

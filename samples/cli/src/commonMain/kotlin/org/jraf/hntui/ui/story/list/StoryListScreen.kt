@@ -49,6 +49,7 @@ import org.jraf.hntui.util.ArrowUp
 import org.jraf.hntui.util.Enter
 import org.jraf.hntui.util.WithConstraints
 import org.jraf.hntui.util.abbreviate
+import org.jraf.hntui.util.formattedRelative
 import org.jraf.klibhn.model.Story
 
 @Composable
@@ -120,8 +121,8 @@ private fun StoryList(
   ) {
     for (story in content.stories.drop(content.scroll).take(availableHeight)) {
       val url = story.urlAbbreviated ?: ""
-      val indexStr = "${story.index + 1}"
-      val title = " " + story.title.abbreviate(availableWidth - indexStr.length - url.length - 2) + " "
+      val creationDate = story.creationDate.formattedRelative()
+      val title = story.title.abbreviate(availableWidth - creationDate.length - 1 - url.length - 1)
       val isFocused = content.focusedIndex == story.index
       Text(
         value = buildAnnotatedString {
@@ -134,16 +135,25 @@ private fun StoryList(
               },
             ),
           ) {
-            withStyle(SpanStyle(color = Color(.5f, .5f, .5f))) {
-              append(indexStr)
-            }
             append(title)
+            append(" ")
+            withStyle(
+              SpanStyle(
+                color = Color.Cyan,
+//                textStyle = TextStyle.Dim + if (isFocused) TextStyle.Invert else TextStyle.Unspecified,
+              ),
+            ) {
+              append(creationDate)
+            }
+            append(" ")
             withStyle(SpanStyle(textStyle = TextStyle.Dim + if (isFocused) TextStyle.Invert else TextStyle.Unspecified)) {
               append(url)
             }
-            val padding = availableWidth - indexStr.length - title.length - url.length
-            if (padding > 0) {
-              append(" ".repeat(padding))
+            if (isFocused) {
+              val padding = availableWidth - creationDate.length - 1 - title.length - 1 - url.length
+              if (padding > 0) {
+                append(" ".repeat(padding))
+              }
             }
           }
         },

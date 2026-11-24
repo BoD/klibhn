@@ -31,6 +31,7 @@ import kotlinx.datetime.format
 import kotlinx.datetime.format.FormatStringsInDatetimeFormats
 import kotlinx.datetime.format.byUnicodePattern
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
 import kotlin.time.Instant
 
 @OptIn(FormatStringsInDatetimeFormats::class)
@@ -40,4 +41,16 @@ fun Instant.formatted(): String {
       byUnicodePattern("uuuu-MM-dd HH:mm")
     },
   )
+}
+
+fun Instant.formattedRelative(): String {
+  val now = Clock.System.now()
+  val diff = now - this
+  return when {
+    diff.inWholeSeconds < 60 -> "1m"
+    diff.inWholeMinutes < 60 -> "${diff.inWholeMinutes}m"
+    diff.inWholeHours < 24 -> "${diff.inWholeHours}h"
+    diff.inWholeDays < 7 -> "${diff.inWholeDays}d"
+    else -> formatted()
+  }
 }

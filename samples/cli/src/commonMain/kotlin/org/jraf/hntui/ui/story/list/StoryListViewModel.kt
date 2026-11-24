@@ -38,6 +38,7 @@ import org.jraf.hntui.data.HnRepository
 import org.jraf.hntui.util.TuiViewModel
 import org.jraf.klibhn.model.Story
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 class StoryListViewModel(private val hnRepository: HnRepository) : TuiViewModel() {
   sealed interface UiState {
@@ -53,6 +54,7 @@ class StoryListViewModel(private val hnRepository: HnRepository) : TuiViewModel(
   data class UiStoryOverview(
     val id: Story.Id,
     val index: Int,
+    val creationDate: Instant,
     val title: String,
     val urlAbbreviated: String?,
   )
@@ -97,6 +99,7 @@ class StoryListViewModel(private val hnRepository: HnRepository) : TuiViewModel(
       UiStoryOverview(
         id = overview.id,
         index = index,
+        creationDate = overview.creationDate,
         title = overview.title,
         urlAbbreviated = overview.url?.abbreviatedUrl(),
       )
