@@ -1,0 +1,169 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "org.jraf.klibhn",
+    "module": "klibhn",
+    "version": "1.0.0-SNAPSHOT",
+    "attributes": {
+      "org.gradle.status": "integration"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.9.2"
+    }
+  },
+  "variants": [
+    {
+      "name": "metadataApiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-metadata",
+        "org.jetbrains.kotlin.platform.type": "common"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.0"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "klibhn-metadata-1.0.0-SNAPSHOT.jar",
+          "url": "klibhn-1.0.0-SNAPSHOT.jar",
+          "size": 12082,
+          "sha512": "eac325c3781a5e4e9dc3bf77d1d98d5bd71d546e18f8a6ea56352f6a4b0ab9454d8f0e8adc2bbbbd227fdc3293e98633aa3b4b070d39ce04fb079bb0329cf6df",
+          "sha256": "28f803de71382b9ee4d28e46ac2b2f1a707b74b79be50489bfa37114cfbed745",
+          "sha1": "01b6980eea86c66ee67ba20cbf517b43d3042bee",
+          "md5": "694facf3cda0669f96b509794ab99ea3"
+        }
+      ]
+    },
+    {
+      "name": "metadataSourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.platform.type": "common"
+      },
+      "files": [
+        {
+          "name": "klibhn-kotlin-1.0.0-SNAPSHOT-sources.jar",
+          "url": "klibhn-1.0.0-SNAPSHOT-sources.jar",
+          "size": 14577,
+          "sha512": "fa463dc61027a38e9eb9e2de46b441d5d2648623fcc60ee79463f5e902cde81bb1c6d4e637a93957001fda1343a0432c5742968476254edce3e5c6901d185925",
+          "sha256": "2a77a1794635148c5a2b892b2f103a1c4e118ac229c96d4f980393bfea33f25c",
+          "sha1": "402e3f3a94286f6071ab6b65e6024712b39eddf8",
+          "md5": "b639c0efb1d1f5cb087dfcf5a2023d4f"
+        }
+      ]
+    },
+    {
+      "name": "jvmApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "available-at": {
+        "url": "../../klibhn-jvm/1.0.0-SNAPSHOT/klibhn-jvm-1.0.0-SNAPSHOT.module",
+        "group": "org.jraf.klibhn",
+        "module": "klibhn-jvm",
+        "version": "1.0.0-SNAPSHOT"
+      }
+    },
+    {
+      "name": "jvmRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "available-at": {
+        "url": "../../klibhn-jvm/1.0.0-SNAPSHOT/klibhn-jvm-1.0.0-SNAPSHOT.module",
+        "group": "org.jraf.klibhn",
+        "module": "klibhn-jvm",
+        "version": "1.0.0-SNAPSHOT"
+      }
+    },
+    {
+      "name": "jvmSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "available-at": {
+        "url": "../../klibhn-jvm/1.0.0-SNAPSHOT/klibhn-jvm-1.0.0-SNAPSHOT.module",
+        "group": "org.jraf.klibhn",
+        "module": "klibhn-jvm",
+        "version": "1.0.0-SNAPSHOT"
+      }
+    },
+    {
+      "name": "macosArm64ApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "macos_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../klibhn-macosarm64/1.0.0-SNAPSHOT/klibhn-macosarm64-1.0.0-SNAPSHOT.module",
+        "group": "org.jraf.klibhn",
+        "module": "klibhn-macosarm64",
+        "version": "1.0.0-SNAPSHOT"
+      }
+    },
+    {
+      "name": "macosArm64SourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.native.target": "macos_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../klibhn-macosarm64/1.0.0-SNAPSHOT/klibhn-macosarm64-1.0.0-SNAPSHOT.module",
+        "group": "org.jraf.klibhn",
+        "module": "klibhn-macosarm64",
+        "version": "1.0.0-SNAPSHOT"
+      }
+    },
+    {
+      "name": "macosArm64MetadataElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-metadata",
+        "org.jetbrains.kotlin.native.target": "macos_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../klibhn-macosarm64/1.0.0-SNAPSHOT/klibhn-macosarm64-1.0.0-SNAPSHOT.module",
+        "group": "org.jraf.klibhn",
+        "module": "klibhn-macosarm64",
+        "version": "1.0.0-SNAPSHOT"
+      }
+    }
+  ]
+}
