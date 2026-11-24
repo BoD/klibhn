@@ -36,4 +36,7 @@ internal data class CommentImpl(
   override val author: String,
   override val text: String,
   override var comments: List<Comment>,
-) : Comment
+) : Comment {
+  // Not a constructor property to avoid cycles in the data class's equals/hashCode/toString
+  override var parentComment: Comment? = null
+}

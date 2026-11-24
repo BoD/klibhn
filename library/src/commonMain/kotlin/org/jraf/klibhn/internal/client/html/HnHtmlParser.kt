@@ -203,6 +203,7 @@ internal class HnHtmlParser {
       } else {
         val parentComment = stack.last().first as CommentImpl
         parentComment.comments += comment
+        (comment as CommentImpl).parentComment = parentComment
       }
       stack.add(comment to indent)
     }

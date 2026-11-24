@@ -192,7 +192,10 @@ class StoryDetailsViewModel(
         }
       }
     }
-    addCollapsedCommentIds(comments)
+    if (comments.isNotEmpty()) {
+      collapsedCommentIds.add(id)
+      addCollapsedCommentIds(comments)
+    }
     return collapsedCommentIds
   }
 
@@ -327,7 +330,11 @@ class StoryDetailsViewModel(
       collapseOrExpandFocusedComment()
       return
     }
-    val parentCommentId = focusedComment.parent.id ?: return
+    val parentCommentId = focusedComment.parentComment?.id
+    if (parentCommentId == null) {
+      onUpKeyPressed()
+      return
+    }
     val newScroll = adjustScroll(state, parentCommentId)
     val readCommentIds = state.readCommentIds + parentCommentId
     internalState.value = state.copy(
@@ -351,11 +358,7 @@ class StoryDetailsViewModel(
     } else {
       val focusedComment = state.commentsById[focusedCommentId]!!
       if (focusedComment.comments.isEmpty()) return
-      buildSet {
-        addAll(state.collapsedCommentIds)
-        add(focusedCommentId)
-        addAll(focusedComment.allCollapsibleCommentIds())
-      }
+      state.collapsedCommentIds + focusedComment.allCollapsibleCommentIds()
     }
     internalState.value = state.copy(
       uiComments = state.story.toUiComments(

@@ -37,6 +37,7 @@ interface Comment {
   val author: String
   val text: String
   val comments: List<Comment>
+  val parentComment: Comment?
 
   @JvmInline
   value class Id(

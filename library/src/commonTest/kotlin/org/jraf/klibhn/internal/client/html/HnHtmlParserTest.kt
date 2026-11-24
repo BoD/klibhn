@@ -34,6 +34,7 @@ import kotlinx.io.files.SystemFileSystem
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.time.ExperimentalTime
 
 class HnHtmlParserTest {
@@ -61,8 +62,10 @@ class HnHtmlParserTest {
       """I think there is a massive opportunity for this kind of feed disaggregation. Used to be the recommender and indexing of content was hard, now I believe we can likely build our own according to our own preferences.<p>Haiku&#x2F;Sonnet (or even Jev) can do a lot of the filtering work to rank and extend an RSS feed list.<p>I think this gives us an opportunity to fully cut the cord from eyeball merchants who want us to maximally engage and therefore polarize their content.<p>The big remaining hook will be the social graph; I am interested to see how far the EU push for mandatory interoperability will go. Another angle I’d support would be mandatory pluggable standards for your own ranking algorithm, but it captures less of the win than full disaggregation.""",
       comment0.text,
     )
+    assertNull(comment0.parentComment)
     assertEquals(4, comment0.comments.size)
     val comment0_0 = comment0.comments[0]
+    assertSame(comment0, comment0_0.parentComment)
     assertEquals(50333322, comment0_0.id.id)
     assertEquals("2026-11-02T05:02:16Z", comment0_0.creationDate.toString())
     assertEquals("appplication", comment0_0.author)
