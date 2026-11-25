@@ -44,12 +44,14 @@ import com.jakewharton.mosaic.ui.Text
 import com.jakewharton.mosaic.ui.TextStyle
 import com.jakewharton.mosaic.ui.UnderlineStyle
 import org.jraf.hntui.data.hnapi.HnApiRepository
+import org.jraf.hntui.data.storage.db.StorageRepository
 import org.jraf.hntui.ui.components.Error
 import org.jraf.hntui.ui.components.Loading
 import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.Companion.INDENT_WIDTH
 import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.UiState
 import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.UiState.Content.UiComment
 import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.UiState.Content.UiStory
+import org.jraf.hntui.ui.theme.Colors
 import org.jraf.hntui.util.ArrowDown
 import org.jraf.hntui.util.ArrowLeft
 import org.jraf.hntui.util.ArrowRight
@@ -64,11 +66,12 @@ import org.jraf.klibhn.model.Story
 @Composable
 fun StoryDetailsScreen(
   hnApiRepository: HnApiRepository,
+  storageRepository: StorageRepository,
   storyId: Story.Id,
   onGoBackToStoryList: () -> Unit,
 ) {
   val viewModel = viewModel(key = "StoryDetailsViewModel:$storyId") {
-    StoryDetailsViewModel(hnApiRepository = hnApiRepository, storyId = storyId)
+    StoryDetailsViewModel(hnApiRepository = hnApiRepository, storageRepository = storageRepository, storyId = storyId)
   }
   WithConstraints(modifier = Modifier.fillMaxSize()) { constraints ->
     val availableHeight = constraints.maxHeight
@@ -209,6 +212,7 @@ private fun UiStory.toHeaderAnnotatedString(availableWidth: Int, commentCount: I
   }
 }
 
+@Composable
 private fun UiComment.toAnnotatedString(availableWidth: Int, isFocused: Boolean): List<AnnotatedString> {
   val indent = " ".repeat(indent * INDENT_WIDTH)
   return buildList {
@@ -218,7 +222,11 @@ private fun UiComment.toAnnotatedString(availableWidth: Int, isFocused: Boolean)
       buildAnnotatedString {
         withStyle(
           SpanStyle(
-            textStyle = if (isFocused) TextStyle.Invert else TextStyle.Unspecified,
+            background = if (isFocused) {
+              Colors.FocusedBackground
+            } else {
+              Color.Unspecified
+            },
           ),
         ) {
           append(indent)
@@ -237,7 +245,7 @@ private fun UiComment.toAnnotatedString(availableWidth: Int, isFocused: Boolean)
             }
           }
           val unread = "*"
-          if (!isRead) {
+          if (!isViewed) {
             append(' ')
             withStyle(SpanStyle(color = Color.Yellow, textStyle = TextStyle.Bold)) {
               append(unread)
@@ -249,7 +257,7 @@ private fun UiComment.toAnnotatedString(availableWidth: Int, isFocused: Boolean)
               author.length -
               1 - creationDate.length -
               (if (isCollapsed) 1 + collapsed.length else 0) -
-              (if (!isRead) 1 + unread.length else 0)
+              (if (!isViewed) 1 + unread.length else 0)
             if (padding > 0) {
               append(" ".repeat(padding))
             }
@@ -264,8 +272,12 @@ private fun UiComment.toAnnotatedString(availableWidth: Int, isFocused: Boolean)
         buildAnnotatedString {
           withStyle(
             SpanStyle(
-              textStyle = (if (textLine.startsWith(">")) TextStyle.Italic else TextStyle.Unspecified) +
-                if (isFocused) TextStyle.Invert else TextStyle.Unspecified,
+              textStyle = (if (textLine.startsWith(">")) TextStyle.Italic else TextStyle.Unspecified),
+              background = if (isFocused) {
+                Colors.FocusedBackground
+              } else {
+                Color.Unspecified
+              },
             ),
           ) {
             append(indent)

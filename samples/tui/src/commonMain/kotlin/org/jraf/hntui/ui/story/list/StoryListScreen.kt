@@ -45,6 +45,7 @@ import org.jraf.hntui.data.storage.db.StorageRepository
 import org.jraf.hntui.ui.components.Error
 import org.jraf.hntui.ui.components.Loading
 import org.jraf.hntui.ui.story.list.StoryListViewModel.UiState
+import org.jraf.hntui.ui.theme.Colors
 import org.jraf.hntui.util.ArrowDown
 import org.jraf.hntui.util.ArrowUp
 import org.jraf.hntui.util.Enter
@@ -135,34 +136,25 @@ private fun StoryList(
       val creationDate = story.creationDate.formattedRelative()
       val title = story.title.abbreviate(availableWidth - creationDate.length - 1 - url.length - 1)
       val isFocused = content.focusedIndex == story.index
+      val isUnread = !story.isViewed
       Text(
         value = buildAnnotatedString {
           withStyle(
             SpanStyle(
-              textStyle = if (isFocused) {
-                TextStyle.Invert
-              } else {
+              textStyle = if (isUnread) {
                 TextStyle.Unspecified
+              } else {
+                TextStyle.Dim
+              },
+              background = if (isFocused) {
+                Colors.FocusedBackground
+              } else {
+                Color.Unspecified
               },
             ),
           ) {
             append(title)
             val unread = "*"
-            if (!story.isViewed) {
-              append(' ')
-              withStyle(
-                SpanStyle(
-                  color = Color.Yellow,
-                  textStyle = TextStyle.Bold + if (isFocused) {
-                    TextStyle.Invert
-                  } else {
-                    TextStyle.Unspecified
-                  },
-                ),
-              ) {
-                append(unread)
-              }
-            }
             append(" ")
             withStyle(
               SpanStyle(
@@ -172,15 +164,19 @@ private fun StoryList(
               append(creationDate)
             }
             append(" ")
-            withStyle(SpanStyle(textStyle = TextStyle.Dim + if (isFocused) TextStyle.Invert else TextStyle.Unspecified)) {
+            withStyle(
+              SpanStyle(
+                color = Color.Green,
+                textStyle = TextStyle.Dim,
+              ),
+            ) {
               append(url)
             }
             if (isFocused) {
               val padding = availableWidth -
                 creationDate.length -
                 1 - title.length -
-                1 - url.length -
-                (if (!story.isViewed) 1 + unread.length else 0)
+                1 - url.length
               if (padding > 0) {
                 append(" ".repeat(padding))
               }

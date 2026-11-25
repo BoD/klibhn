@@ -66,6 +66,7 @@ fun MainScreen() {
 
       is UiState.StoryDetails -> StoryDetailsScreen(
         hnApiRepository = hnApiRepository,
+        storageRepository = storageRepository,
         storyId = uiState.id,
         onGoBackToStoryList = { viewModel.goBackToStoryList() },
       )
