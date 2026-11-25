@@ -1,1 +1,1 @@
-./gradlew :cli:linkDebugExecutableMacosArm64 && ./samples/cli/build/bin/macosArm64/debugExecutable/cli.kexe
+./gradlew :tui:linkDebugExecutableMacosArm64 && ./samples/tui/build/bin/macosArm64/debugExecutable/tui.kexe

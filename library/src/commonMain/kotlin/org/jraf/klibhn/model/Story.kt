@@ -64,6 +64,6 @@ sealed interface Story {
 
   @JvmInline
   value class Id(
-    internal val id: Long,
+    val id: Long,
   )
 }

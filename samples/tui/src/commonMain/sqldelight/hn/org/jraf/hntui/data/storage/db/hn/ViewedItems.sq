@@ -1,0 +1,22 @@
+CREATE TABLE ViewedItems (
+    id INTEGER NOT NULL,
+    item_type INTEGER NOT NULL,
+    viewed_date INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    PRIMARY KEY (id, item_type)
+);
+
+insert:
+INSERT OR REPLACE INTO ViewedItems (
+    id,
+    item_type
+) VALUES (
+    :id,
+    :item_type
+);
+
+select:
+SELECT id FROM ViewedItems
+WHERE item_type = :item_type;
+
+delete:
+DELETE FROM ViewedItems WHERE id = :id AND item_type = :item_type;

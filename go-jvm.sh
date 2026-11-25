@@ -1,1 +1,1 @@
-./gradlew installJvmDist && ./samples/cli/build/install/cli-jvm/bin/cli
+./gradlew installJvmDist && ./samples/tui/build/install/tui-jvm/bin/tui

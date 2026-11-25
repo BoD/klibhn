@@ -1,0 +1,74 @@
+/*
+ * This source is part of the
+ *      _____  ___   ____
+ *  __ / / _ \/ _ | / __/___  _______ _
+ * / // / , _/ __ |/ _/_/ _ \/ __/ _ `/
+ * \___/_/|_/_/ |_/_/ (_)___/_/  \_, /
+ *                              /___/
+ * repository.
+ *
+ * Copyright (C) 2026-present Benoit 'BoD' Lubek (BoD@JRAF.org)
+ * and contributors (https://github.com/BoD/klibhn/graphs/contributors)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.jraf.hntui.ui.main
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.jakewharton.mosaic.LocalTerminalState
+import com.jakewharton.mosaic.layout.size
+import com.jakewharton.mosaic.modifier.Modifier
+import com.jakewharton.mosaic.ui.Box
+import org.jraf.hntui.data.hnapi.HnApiRepository
+import org.jraf.hntui.data.settings.SettingsRepository
+import org.jraf.hntui.data.storage.db.StorageRepository
+import org.jraf.hntui.ui.main.MainViewModel.UiState
+import org.jraf.hntui.ui.story.details.StoryDetailsScreen
+import org.jraf.hntui.ui.story.list.StoryListScreen
+
+@Composable
+fun MainScreen() {
+  val screenSize = LocalTerminalState.current.size
+  Box(
+    modifier = Modifier.size(
+      width = screenSize.columns,
+      height = screenSize.rows - 1, // Need to remove 1 because of the cursor which adds a new line
+    ),
+  ) {
+    // TODO use a DI framework
+    val hnApiRepository = remember { HnApiRepository() }
+    val settingsRepository = remember { SettingsRepository() }
+    val storageRepository = remember { StorageRepository(dbFile = settingsRepository.dbFile) }
+    val viewModel = viewModel { MainViewModel() }
+    val uiState by viewModel.uiState.collectAsState()
+
+    when (val uiState = uiState) {
+      is UiState.StoryList -> StoryListScreen(
+        hnApiRepository = hnApiRepository,
+        storageRepository = storageRepository,
+        onSelectStory = { id -> viewModel.selectStory(id) },
+      )
+
+      is UiState.StoryDetails -> StoryDetailsScreen(
+        hnApiRepository = hnApiRepository,
+        storyId = uiState.id,
+        onGoBackToStoryList = { viewModel.goBackToStoryList() },
+      )
+    }
+  }
+}

@@ -1,0 +1,193 @@
+/*
+ * This source is part of the
+ *      _____  ___   ____
+ *  __ / / _ \/ _ | / __/___  _______ _
+ * / // / , _/ __ |/ _/_/ _ \/ __/ _ `/
+ * \___/_/|_/_/ |_/_/ (_)___/_/  \_, /
+ *                              /___/
+ * repository.
+ *
+ * Copyright (C) 2026-present Benoit 'BoD' Lubek (BoD@JRAF.org)
+ * and contributors (https://github.com/BoD/klibhn/graphs/contributors)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.jraf.hntui.ui.story.list
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.jakewharton.mosaic.layout.fillMaxSize
+import com.jakewharton.mosaic.layout.onKeyEvent
+import com.jakewharton.mosaic.modifier.Modifier
+import com.jakewharton.mosaic.text.SpanStyle
+import com.jakewharton.mosaic.text.buildAnnotatedString
+import com.jakewharton.mosaic.text.withStyle
+import com.jakewharton.mosaic.ui.Color
+import com.jakewharton.mosaic.ui.Column
+import com.jakewharton.mosaic.ui.Text
+import com.jakewharton.mosaic.ui.TextStyle
+import org.jraf.hntui.data.hnapi.HnApiRepository
+import org.jraf.hntui.data.storage.db.StorageRepository
+import org.jraf.hntui.ui.components.Error
+import org.jraf.hntui.ui.components.Loading
+import org.jraf.hntui.ui.story.list.StoryListViewModel.UiState
+import org.jraf.hntui.util.ArrowDown
+import org.jraf.hntui.util.ArrowUp
+import org.jraf.hntui.util.Enter
+import org.jraf.hntui.util.WithConstraints
+import org.jraf.hntui.util.abbreviate
+import org.jraf.hntui.util.formattedRelative
+import org.jraf.klibhn.model.Story
+
+@Composable
+fun StoryListScreen(
+  hnApiRepository: HnApiRepository,
+  storageRepository: StorageRepository,
+  onSelectStory: (Story.Id) -> Unit,
+) {
+  val viewModel = viewModel {
+    StoryListViewModel(
+      hnApiRepository = hnApiRepository,
+      storageRepository = storageRepository,
+    )
+  }
+  WithConstraints(modifier = Modifier.fillMaxSize()) { constraints ->
+    val availableHeight = constraints.maxHeight
+    val availableWidth = constraints.maxWidth
+    LaunchedEffect(availableHeight) {
+      viewModel.setScreenHeight(availableHeight)
+    }
+
+    val uiState by viewModel.uiState.collectAsState()
+    when (val uiState = uiState) {
+      UiState.Loading -> {
+        Loading()
+      }
+
+      is UiState.Error -> {
+        Error(uiState.throwable)
+      }
+
+      is UiState.Content -> {
+        StoryList(
+          content = uiState,
+          onFocusUp = viewModel::focusUp,
+          onFocusDown = viewModel::focusDown,
+          onSelectStory = { storyId ->
+            viewModel.markStoryAsViewed(storyId)
+            onSelectStory(storyId)
+          },
+          availableHeight = availableHeight,
+          availableWidth = availableWidth,
+        )
+      }
+    }
+  }
+}
+
+@Composable
+private fun StoryList(
+  content: UiState.Content,
+  onFocusUp: () -> Unit,
+  onFocusDown: () -> Unit,
+  onSelectStory: (Story.Id) -> Unit,
+  availableHeight: Int,
+  availableWidth: Int,
+) {
+  Column(
+    modifier = Modifier
+      .fillMaxSize()
+      .onKeyEvent { keyEvent ->
+        when (keyEvent) {
+          ArrowUp -> {
+            onFocusUp()
+          }
+
+          ArrowDown -> {
+            onFocusDown()
+          }
+
+          Enter -> {
+            onSelectStory(content.stories[content.focusedIndex].id)
+          }
+
+          else -> return@onKeyEvent false
+        }
+        true
+      },
+  ) {
+    for (story in content.stories.drop(content.scroll).take(availableHeight)) {
+      val url = story.urlAbbreviated ?: ""
+      val creationDate = story.creationDate.formattedRelative()
+      val title = story.title.abbreviate(availableWidth - creationDate.length - 1 - url.length - 1)
+      val isFocused = content.focusedIndex == story.index
+      Text(
+        value = buildAnnotatedString {
+          withStyle(
+            SpanStyle(
+              textStyle = if (isFocused) {
+                TextStyle.Invert
+              } else {
+                TextStyle.Unspecified
+              },
+            ),
+          ) {
+            append(title)
+            val unread = "*"
+            if (!story.isViewed) {
+              append(' ')
+              withStyle(
+                SpanStyle(
+                  color = Color.Yellow,
+                  textStyle = TextStyle.Bold + if (isFocused) {
+                    TextStyle.Invert
+                  } else {
+                    TextStyle.Unspecified
+                  },
+                ),
+              ) {
+                append(unread)
+              }
+            }
+            append(" ")
+            withStyle(
+              SpanStyle(
+                color = Color.Cyan,
+              ),
+            ) {
+              append(creationDate)
+            }
+            append(" ")
+            withStyle(SpanStyle(textStyle = TextStyle.Dim + if (isFocused) TextStyle.Invert else TextStyle.Unspecified)) {
+              append(url)
+            }
+            if (isFocused) {
+              val padding = availableWidth -
+                creationDate.length -
+                1 - title.length -
+                1 - url.length -
+                (if (!story.isViewed) 1 + unread.length else 0)
+              if (padding > 0) {
+                append(" ".repeat(padding))
+              }
+            }
+          }
+        },
+      )
+    }
+  }
+}

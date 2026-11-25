@@ -41,6 +41,6 @@ interface Comment {
 
   @JvmInline
   value class Id(
-    internal val id: Long,
+    val id: Long,
   )
 }
