@@ -27,12 +27,15 @@ package org.jraf.hntui.util
 
 import com.jakewharton.mosaic.layout.KeyEvent
 
-val Escape = KeyEvent("Escape")
-val ArrowUp = KeyEvent("ArrowUp")
-val ArrowDown = KeyEvent("ArrowDown")
-val ArrowLeft = KeyEvent("ArrowLeft")
-val ArrowRight = KeyEvent("ArrowRight")
-val Enter = KeyEvent("Enter")
-val Minus = KeyEvent("-")
-val Plus = KeyEvent("+")
-val Equals = KeyEvent("=")
+object Keyboard {
+  val Escape = KeyEvent("Escape")
+  val ArrowUp = KeyEvent("ArrowUp")
+  val ArrowDown = KeyEvent("ArrowDown")
+  val ArrowLeft = KeyEvent("ArrowLeft")
+  val ArrowRight = KeyEvent("ArrowRight")
+  val Enter = KeyEvent("Enter")
+  val Minus = KeyEvent("-")
+  val Plus = KeyEvent("+")
+  val Equals = KeyEvent("=")
+  val Q = KeyEvent("q")
+}

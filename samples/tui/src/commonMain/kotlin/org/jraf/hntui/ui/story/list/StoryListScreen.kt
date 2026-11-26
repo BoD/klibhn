@@ -46,9 +46,7 @@ import org.jraf.hntui.ui.components.Error
 import org.jraf.hntui.ui.components.Loading
 import org.jraf.hntui.ui.story.list.StoryListViewModel.UiState
 import org.jraf.hntui.ui.theme.Colors
-import org.jraf.hntui.util.ArrowDown
-import org.jraf.hntui.util.ArrowUp
-import org.jraf.hntui.util.Enter
+import org.jraf.hntui.util.Keyboard
 import org.jraf.hntui.util.WithConstraints
 import org.jraf.hntui.util.abbreviate
 import org.jraf.hntui.util.formattedRelative
@@ -114,15 +112,15 @@ private fun StoryList(
       .fillMaxSize()
       .onKeyEvent { keyEvent ->
         when (keyEvent) {
-          ArrowUp -> {
+          Keyboard.ArrowUp -> {
             onUpKeyPressed()
           }
 
-          ArrowDown -> {
+          Keyboard.ArrowDown -> {
             onDownKeyPressed()
           }
 
-          Enter -> {
+          Keyboard.Enter -> {
             onSelectStory(content.stories[content.focusedIndex].id)
           }
 

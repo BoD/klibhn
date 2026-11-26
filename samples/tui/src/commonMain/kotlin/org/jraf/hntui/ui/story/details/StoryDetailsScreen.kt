@@ -52,12 +52,8 @@ import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.UiState
 import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.UiState.Content.UiComment
 import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.UiState.Content.UiStory
 import org.jraf.hntui.ui.theme.Colors
-import org.jraf.hntui.util.ArrowDown
-import org.jraf.hntui.util.ArrowLeft
-import org.jraf.hntui.util.ArrowRight
-import org.jraf.hntui.util.ArrowUp
 import org.jraf.hntui.util.Dimensions
-import org.jraf.hntui.util.Escape
+import org.jraf.hntui.util.Keyboard
 import org.jraf.hntui.util.WithConstraints
 import org.jraf.hntui.util.abbreviate
 import org.jraf.hntui.util.formattedRelative
@@ -84,23 +80,23 @@ fun StoryDetailsScreen(
         .fillMaxSize()
         .onKeyEvent { keyEvent ->
           when (keyEvent) {
-            Escape -> {
+            Keyboard.Escape -> {
               onGoBackToStoryList()
             }
 
-            ArrowUp -> {
+            Keyboard.ArrowUp -> {
               viewModel.onUpKeyPressed()
             }
 
-            ArrowDown -> {
+            Keyboard.ArrowDown -> {
               viewModel.onDownKeyPressed()
             }
 
-            ArrowLeft -> {
+            Keyboard.ArrowLeft -> {
               viewModel.onLeftKeyPressed()
             }
 
-            ArrowRight -> {
+            Keyboard.ArrowRight -> {
               viewModel.onRightKeyPressed()
             }
 

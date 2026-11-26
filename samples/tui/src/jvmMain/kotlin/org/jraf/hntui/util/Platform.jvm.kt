@@ -30,3 +30,7 @@ import kotlinx.io.files.Path
 actual fun getHomeDirectory(): Path {
   return Path(System.getProperty("user.home"))
 }
+
+actual fun exitProcess(status: Int): Nothing {
+  kotlin.system.exitProcess(status)
+}

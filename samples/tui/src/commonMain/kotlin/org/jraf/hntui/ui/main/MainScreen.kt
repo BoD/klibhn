@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jakewharton.mosaic.LocalTerminalState
+import com.jakewharton.mosaic.layout.onKeyEvent
 import com.jakewharton.mosaic.layout.size
 import com.jakewharton.mosaic.modifier.Modifier
 import com.jakewharton.mosaic.ui.Box
@@ -40,6 +41,8 @@ import org.jraf.hntui.data.storage.db.StorageRepository
 import org.jraf.hntui.ui.main.MainViewModel.UiState
 import org.jraf.hntui.ui.story.details.StoryDetailsScreen
 import org.jraf.hntui.ui.story.list.StoryListScreen
+import org.jraf.hntui.util.Keyboard
+import org.jraf.hntui.util.exitProcess
 
 @Composable
 fun MainScreen() {
@@ -48,7 +51,15 @@ fun MainScreen() {
     modifier = Modifier.size(
       width = screenSize.columns,
       height = screenSize.rows - 1, // Need to remove 1 because of the cursor which adds a new line
-    ),
+    ).onKeyEvent { keyEvent ->
+      when (keyEvent) {
+        Keyboard.Escape, Keyboard.Q -> {
+          exitProcess(0)
+        }
+
+        else -> return@onKeyEvent false
+      }
+    },
   ) {
     // TODO use a DI framework
     val hnApiRepository = remember { HnApiRepository() }

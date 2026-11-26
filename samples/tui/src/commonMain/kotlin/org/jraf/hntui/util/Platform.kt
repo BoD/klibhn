@@ -28,3 +28,5 @@ package org.jraf.hntui.util
 import kotlinx.io.files.Path
 
 expect fun getHomeDirectory(): Path
+
+expect fun exitProcess(status: Int): Nothing
