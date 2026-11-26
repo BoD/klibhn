@@ -250,6 +250,11 @@ private fun UiComment.toAnnotatedString(availableWidth: Int, isFocused: Boolean)
             withStyle(SpanStyle(color = Color.Yellow, textStyle = TextStyle.Bold)) {
               append(unread)
             }
+          } else if (!isAllDescendantsViewed && isCollapsed) {
+            append(' ')
+            withStyle(SpanStyle(color = Color.Yellow, textStyle = TextStyle.Dim)) {
+              append(unread)
+            }
           }
 
           if (isFocused) {
@@ -257,7 +262,7 @@ private fun UiComment.toAnnotatedString(availableWidth: Int, isFocused: Boolean)
               author.length -
               1 - creationDate.length -
               (if (isCollapsed) 1 + collapsed.length else 0) -
-              (if (!isViewed) 1 + unread.length else 0)
+              (if (!isViewed || (!isAllDescendantsViewed && isCollapsed)) 1 + unread.length else 0)
             if (padding > 0) {
               append(" ".repeat(padding))
             }

@@ -100,6 +100,7 @@ class StoryDetailsViewModel(
         val isCollapsed: Boolean,
         val childCount: Int,
         val isViewed: Boolean,
+        val isAllDescendantsViewed: Boolean,
       )
     }
   }
@@ -182,7 +183,10 @@ class StoryDetailsViewModel(
         UiState.Content(
           story = uiStory,
           comments = uiComments.map {
-            it.copy(isViewed = it.id in viewedCommentIds)
+            it.copy(
+              isViewed = it.id in viewedCommentIds,
+              isAllDescendantsViewed = isAllDescendantsViewed(storyLoadingState.commentsById[it.id]!!, viewedCommentIds),
+            )
           },
           totalCommentCount = storyLoadingState.story.commentCount,
           focusedCommentId = focusedCommentId,
@@ -259,7 +263,9 @@ class StoryDetailsViewModel(
             textLines = comment.text.htmlWrapped(maxWidth = (maxWidth - indent * INDENT_WIDTH).coerceAtMost(MAX_COMMENT_WIDTH)),
             isCollapsed = isCollapsed,
             childCount = comment.comments.size,
-            isViewed = false, // This will be updated later in the flow
+            // This will be updated later in the flow
+            isViewed = false,
+            isAllDescendantsViewed = false,
           ),
         )
         if (!isCollapsed) {
@@ -375,6 +381,16 @@ class StoryDetailsViewModel(
   private fun markCommentAsViewed(newFocusedCommentId: Comment.Id) {
     viewModelScope.launch {
       storageRepository.markCommentAsViewed(newFocusedCommentId)
+    }
+  }
+
+  private fun isAllDescendantsViewed(
+    comment: Comment,
+    viewedCommentIds: Set<Comment.Id>,
+  ): Boolean {
+    if (comment.comments.isEmpty()) return true
+    return comment.comments.all { childComment ->
+      childComment.id in viewedCommentIds && isAllDescendantsViewed(childComment, viewedCommentIds)
     }
   }
 }
