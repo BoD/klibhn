@@ -26,12 +26,23 @@
 package org.jraf.hntui.ui.components
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import com.jakewharton.mosaic.layout.fillMaxSize
 import com.jakewharton.mosaic.modifier.Modifier
+import com.jakewharton.mosaic.text.SpanStyle
+import com.jakewharton.mosaic.text.buildAnnotatedString
+import com.jakewharton.mosaic.text.withStyle
 import com.jakewharton.mosaic.ui.Alignment
 import com.jakewharton.mosaic.ui.Arrangement
 import com.jakewharton.mosaic.ui.Column
 import com.jakewharton.mosaic.ui.Text
+import com.jakewharton.mosaic.ui.TextStyle
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun Loading() {
@@ -40,8 +51,26 @@ fun Loading() {
     verticalArrangement = Arrangement.Center,
     horizontalAlignment = Alignment.CenterHorizontally,
   ) {
-    Text(
-      value = "Loading...",
-    )
+    val loading = "Loading..."
+    var text by remember { mutableStateOf(buildAnnotatedString { append(loading) }) }
+    LaunchedEffect(Unit) {
+      var i = 0
+      while (true) {
+        i = (i + 1) % loading.length
+        text = buildAnnotatedString {
+          append(loading.substring(0, i))
+          withStyle(
+            SpanStyle(
+              textStyle = TextStyle.Bold,
+            ),
+          ) {
+            append(loading[i])
+          }
+          append(loading.substring(i + 1))
+        }
+        delay(100.milliseconds)
+      }
+    }
+    Text(text)
   }
 }
