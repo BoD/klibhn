@@ -32,12 +32,15 @@ import org.jraf.klibhn.internal.model.StoryImpl
 import org.jraf.klibhn.model.Comment
 import org.jraf.klibhn.model.Story
 import org.jraf.klibregexdsl.AnyCharacter
+import org.jraf.klibregexdsl.AsciiAlphanumeric
 import org.jraf.klibregexdsl.Characters
 import org.jraf.klibregexdsl.Digit
 import org.jraf.klibregexdsl.Group
 import org.jraf.klibregexdsl.QuantifierType
 import org.jraf.klibregexdsl.Sequence
+import org.jraf.klibregexdsl.WhitespaceCharacter
 import org.jraf.klibregexdsl.oneOrMoreTimes
+import org.jraf.klibregexdsl.union
 import org.jraf.klibregexdsl.zeroOrMoreTimes
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -117,8 +120,11 @@ internal class HnHtmlParser {
     AnyCharacter.zeroOrMoreTimes(QuantifierType.RELUCTANT),
     Characters("\n"),
     AnyCharacter.zeroOrMoreTimes(QuantifierType.RELUCTANT),
-    Characters("""<div class="commtext c00">"""),
-    Group(AnyCharacter.zeroOrMoreTimes(QuantifierType.RELUCTANT)), // Text
+    Characters("""<div class="commtext c"""),
+    AsciiAlphanumeric, // The commtext class varies (c00, c5A, c73, ...)
+    AsciiAlphanumeric,
+    Characters("\">"),
+    Group(union(AnyCharacter, WhitespaceCharacter).zeroOrMoreTimes(QuantifierType.RELUCTANT)), // Text
     Characters("""</div>"""),
   )
     .toRegex()

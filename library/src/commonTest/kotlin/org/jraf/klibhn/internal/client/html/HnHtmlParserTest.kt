@@ -35,6 +35,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 import kotlin.time.ExperimentalTime
 
 class HnHtmlParserTest {
@@ -53,7 +54,7 @@ class HnHtmlParserTest {
     )
     assertEquals("https://karpathy.bearblog.dev/hacker-tube/", storyWithComments.url)
 
-    assertEquals(225, storyWithComments.comments.size)
+    assertEquals(241, storyWithComments.comments.size)
     val comment0 = storyWithComments.comments[0]
     assertEquals(50327005, comment0.id.id)
     assertEquals("2026-11-01T16:17:28Z", comment0.creationDate.toString())
@@ -88,5 +89,13 @@ class HnHtmlParserTest {
     val html = SystemFileSystem.source(Path("../etc/fixtures/story-without-url.html")).buffered().use { it.readText() }
     val storyWithComments = HnHtmlParser().parseStoryWithComments(html)
     assertNull(storyWithComments.url)
+  }
+
+  @Test
+  fun parseStoryWithoutText2() {
+    val html = SystemFileSystem.source(Path("../etc/fixtures/story-without-text-2.html")).buffered().use { it.readText() }
+    val storyWithComments = HnHtmlParser().parseStoryWithComments(html)
+    val comment0 = storyWithComments.comments[0]
+    assertTrue(comment0.text.startsWith("With this new Ternary Bonsai"))
   }
 }
