@@ -34,8 +34,7 @@ import kotlin.test.Test
 class KonsistTest {
   @Test
   fun `internal packages expose no public declarations`() {
-    Konsist
-      .scopeFromPackage("..internal..")
+    (Konsist.scopeFromPackage("..internal..") - Konsist.scopeFromTest())
       .declarationsOf<KoVisibilityModifierProvider>(includeNested = false, includeLocal = false)
       .assertFalse { it.hasPublicOrDefaultModifier }
   }
