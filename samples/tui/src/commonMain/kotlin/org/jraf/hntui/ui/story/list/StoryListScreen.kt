@@ -86,8 +86,8 @@ fun StoryListScreen(
       is UiState.Content -> {
         StoryList(
           content = uiState,
-          onFocusUp = viewModel::focusUp,
-          onFocusDown = viewModel::focusDown,
+          onUpKeyPressed = viewModel::onUpKeyPressed,
+          onDownKeyPressed = viewModel::onDownKeyPressed,
           onSelectStory = { storyId ->
             viewModel.markStoryAsViewed(storyId)
             onSelectStory(storyId)
@@ -103,8 +103,8 @@ fun StoryListScreen(
 @Composable
 private fun StoryList(
   content: UiState.Content,
-  onFocusUp: () -> Unit,
-  onFocusDown: () -> Unit,
+  onUpKeyPressed: () -> Unit,
+  onDownKeyPressed: () -> Unit,
   onSelectStory: (Story.Id) -> Unit,
   availableHeight: Int,
   availableWidth: Int,
@@ -115,11 +115,11 @@ private fun StoryList(
       .onKeyEvent { keyEvent ->
         when (keyEvent) {
           ArrowUp -> {
-            onFocusUp()
+            onUpKeyPressed()
           }
 
           ArrowDown -> {
-            onFocusDown()
+            onDownKeyPressed()
           }
 
           Enter -> {

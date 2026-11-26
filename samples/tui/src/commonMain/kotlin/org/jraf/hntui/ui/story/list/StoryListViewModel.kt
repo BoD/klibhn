@@ -42,6 +42,8 @@ import org.jraf.klibhn.model.Story
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
+private const val SCROLL_ADDITIONAL_MARGIN_FACTOR = .15
+
 class StoryListViewModel(
   private val hnApiRepository: HnApiRepository,
   private val storageRepository: StorageRepository,
@@ -110,7 +112,7 @@ class StoryListViewModel(
         index = index,
         creationDate = overview.creationDate,
         title = overview.title,
-        urlAbbreviated = overview.url?.abbreviatedUrl(),
+        urlAbbreviated = overview.url?.shortenedUrl(),
         isViewed = overview.id in viewedStoryIds,
       )
     }
@@ -141,28 +143,31 @@ class StoryListViewModel(
     }
   }
 
-  fun focusUp() {
+  fun onUpKeyPressed() {
     if (uiState.value !is UiState.Content) return
     val newFocusedIndex = focusedIndex.value - 1
     if (newFocusedIndex < 0) return
     focusedIndex.value = newFocusedIndex
 
-    if (newFocusedIndex < scroll.value) {
-      scroll.value--
+    val additionalMargin = (screenHeight * SCROLL_ADDITIONAL_MARGIN_FACTOR).toInt()
+    if (newFocusedIndex - scroll.value < additionalMargin) {
+      scroll.value = (scroll.value - 1).coerceAtLeast(0)
     }
   }
 
-  fun focusDown() {
+  fun onDownKeyPressed() {
     if (uiState.value !is UiState.Content) return
     val newFocusIndex = focusedIndex.value + 1
     if (newFocusIndex > storyIdsCount - 1) return
-    if (newFocusIndex >= (requestedStoryCount.value ?: 0)) {
-      requestStoryCount(newFocusIndex + 1)
+
+    val additionalMargin = (screenHeight * SCROLL_ADDITIONAL_MARGIN_FACTOR).toInt()
+    if (newFocusIndex >= (requestedStoryCount.value ?: 0) - additionalMargin) {
+      requestStoryCount((requestedStoryCount.value ?: 0) + screenHeight)
     }
     focusedIndex.value = newFocusIndex
 
-    if (newFocusIndex >= scroll.value + screenHeight) {
-      scroll.value++
+    if (newFocusIndex >= scroll.value + screenHeight - additionalMargin) {
+      scroll.value = (scroll.value + 1).coerceAtMost(storyIdsCount - screenHeight)
     }
   }
 
@@ -173,7 +178,7 @@ class StoryListViewModel(
   }
 }
 
-private fun String.abbreviatedUrl(): String {
+private fun String.shortenedUrl(): String {
   return removePrefix("https://")
     .removePrefix("http://")
     .removePrefix("www.")
