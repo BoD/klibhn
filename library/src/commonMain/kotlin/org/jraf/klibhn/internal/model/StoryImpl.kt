@@ -53,5 +53,6 @@ internal interface StoryImpl {
     override val text: String?,
     override val url: String?,
     override val comments: List<Comment>,
+    override val commentCount: Int,
   ) : Story.WithComments
 }

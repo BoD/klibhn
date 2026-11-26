@@ -39,6 +39,8 @@ sealed interface Story {
   val score: Int
   val text: String?
   val url: String?
+  val commentCount: Int
+
 
   interface Overview : Story {
     override val id: Id
@@ -48,7 +50,7 @@ sealed interface Story {
     override val score: Int
     override val text: String?
     override val url: String?
-    val commentCount: Int
+    override val commentCount: Int
   }
 
   interface WithComments : Story {
@@ -59,6 +61,7 @@ sealed interface Story {
     override val score: Int
     override val text: String?
     override val url: String?
+    override val commentCount: Int
     val comments: List<Comment>
   }
 

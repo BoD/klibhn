@@ -32,6 +32,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.jraf.hntui.data.hnapi.HnApiRepository
@@ -48,7 +51,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 private const val MAX_COMMENT_WIDTH = 120
-private const val SCROLL_ADDITIONAL_MARGIN = 10
+private const val SCROLL_ADDITIONAL_MARGIN_FACTOR = .15
 
 class StoryDetailsViewModel(
   private val hnApiRepository: HnApiRepository,
@@ -59,20 +62,13 @@ class StoryDetailsViewModel(
     const val INDENT_WIDTH = 2
   }
 
-  sealed interface InternalState {
-    object Loading : InternalState
-    data class Error(val throwable: Throwable) : InternalState
+  sealed interface StoryLoadingState {
+    object Loading : StoryLoadingState
+    data class Error(val throwable: Throwable) : StoryLoadingState
     data class Content(
-      val screenDimensions: Dimensions,
       val story: Story.WithComments,
       val commentsById: Map<Comment.Id, Comment>,
-      val totalCommentCount: Int,
-      val uiStory: UiStory,
-      val uiComments: List<UiComment>,
-      val focusedCommentId: Comment.Id?,
-      val scroll: Int,
-      val collapsedCommentIds: Set<Comment.Id>,
-    ) : InternalState
+    ) : StoryLoadingState
   }
 
   sealed interface UiState {
@@ -108,23 +104,89 @@ class StoryDetailsViewModel(
     }
   }
 
-  private val internalState = MutableStateFlow<InternalState>(InternalState.Loading)
+  private val storyLoadingState = flow {
+    hnApiRepository.getStoryWithComments(storyId)
+      .onFailure {
+        emit(StoryLoadingState.Error(it))
+      }
+      .onSuccess { story ->
+        // Focus the first comment, and mark it as viewed
+        story.comments.firstOrNull()?.let {
+          focusedCommentId.value = it.id
+          markCommentAsViewed(it.id)
+        }
+
+        // Collapse all comments by default
+        collapsedCommentIds.value = story.allCollapsibleCommentIds()
+
+        emit(StoryLoadingState.Content(story = story, commentsById = story.commentsById()))
+      }
+  }.stateIn(
+    scope = viewModelScope,
+    started = SharingStarted.WhileSubscribed(5.seconds),
+    initialValue = StoryLoadingState.Loading,
+  )
+
+  private val screenDimensions = MutableStateFlow<Dimensions?>(null)
+  private val focusedCommentId = MutableStateFlow<Comment.Id?>(null)
+  private val scroll = MutableStateFlow(0)
+  private val collapsedCommentIds = MutableStateFlow<Set<Comment.Id>>(emptySet())
+
   private val viewedCommentIds: Flow<Set<Comment.Id>> = storageRepository.getViewedCommentIds()
 
+  private val uiStory: StateFlow<UiStory?> = combine(
+    storyLoadingState.filterIsInstance(StoryLoadingState.Content::class),
+    screenDimensions.filterNotNull(),
+  ) { storyLoadingState, screenDimensions ->
+    storyLoadingState.story.toUiStory(screenDimensions.width)
+  }.stateIn(
+    scope = viewModelScope,
+    started = SharingStarted.WhileSubscribed(5.seconds),
+    initialValue = null,
+  )
+
+  private val uiComments: StateFlow<List<UiComment>> = combine(
+    storyLoadingState.filterIsInstance(StoryLoadingState.Content::class),
+    screenDimensions.filterNotNull(),
+    collapsedCommentIds,
+  ) { storyLoadingState, screenDimensions, collapsedCommentIds ->
+    storyLoadingState.story.toUiComments(
+      maxWidth = screenDimensions.width,
+      collapsedCommentIds = collapsedCommentIds,
+    )
+  }.stateIn(
+    scope = viewModelScope,
+    started = SharingStarted.WhileSubscribed(5.seconds),
+    initialValue = emptyList(),
+  )
+
+  @Suppress("UNCHECKED_CAST")
   val uiState: StateFlow<UiState> = combine(
-    internalState,
+    storyLoadingState,
+    uiStory.filterNotNull(),
+    uiComments,
+    focusedCommentId,
+    scroll,
     viewedCommentIds,
-  ) { internalState, viewedCommentIds ->
-    when (internalState) {
-      is InternalState.Loading -> UiState.Loading
-      is InternalState.Error -> UiState.Error(internalState.throwable)
-      is InternalState.Content -> {
+  ) { array ->
+    val storyLoadingState = array[0] as StoryLoadingState
+    val uiStory = array[1] as UiStory
+    val uiComments = array[2] as List<UiComment>
+    val focusedCommentId = array[3] as Comment.Id?
+    val scroll = array[4] as Int
+    val viewedCommentIds = array[5] as Set<Comment.Id>
+    when (storyLoadingState) {
+      is StoryLoadingState.Loading -> UiState.Loading
+      is StoryLoadingState.Error -> UiState.Error(storyLoadingState.throwable)
+      is StoryLoadingState.Content -> {
         UiState.Content(
-          story = internalState.uiStory,
-          comments = internalState.uiComments.map { uiComments -> uiComments.copy(isViewed = uiComments.id in viewedCommentIds) },
-          totalCommentCount = internalState.totalCommentCount,
-          focusedCommentId = internalState.focusedCommentId,
-          scroll = internalState.scroll,
+          story = uiStory,
+          comments = uiComments.map {
+            it.copy(isViewed = it.id in viewedCommentIds)
+          },
+          totalCommentCount = storyLoadingState.story.commentCount,
+          focusedCommentId = focusedCommentId,
+          scroll = scroll,
         )
       }
     }
@@ -135,57 +197,7 @@ class StoryDetailsViewModel(
   )
 
   fun setScreenDimensions(dimensions: Dimensions) {
-    when (internalState.value) {
-      is InternalState.Error -> {
-        return
-      }
-
-      is InternalState.Content -> {
-        val state = internalState.value as InternalState.Content
-        if (state.screenDimensions == dimensions) {
-          return
-        }
-        internalState.value = state.copy(
-          screenDimensions = dimensions,
-          uiStory = state.story.toUiStory(dimensions.width),
-          uiComments = state.story.toUiComments(
-            maxWidth = dimensions.width,
-            collapsedCommentIds = state.collapsedCommentIds,
-          ),
-          scroll = adjustScroll(state, state.focusedCommentId),
-        )
-
-      }
-
-      is InternalState.Loading -> {
-        viewModelScope.launch {
-          val story = hnApiRepository.getStoryWithComments(storyId).getOrElse { e ->
-            internalState.value = InternalState.Error(e)
-            return@launch
-          }
-
-          // Mark the first comment as viewed
-          story.comments.firstOrNull()?.let { markCommentAsViewed(it.id) }
-
-          // Collapse all comments by default
-          val collapsedCommentIds = story.allCollapsibleCommentIds()
-          internalState.value = InternalState.Content(
-            screenDimensions = dimensions,
-            story = story,
-            commentsById = story.commentsById(),
-            totalCommentCount = story.totalCommentCount(),
-            uiStory = story.toUiStory(dimensions.width),
-            uiComments = story.toUiComments(
-              maxWidth = dimensions.width,
-              collapsedCommentIds = collapsedCommentIds,
-            ),
-            focusedCommentId = story.comments.firstOrNull()?.id,
-            scroll = 0,
-            collapsedCommentIds = collapsedCommentIds,
-          )
-        }
-      }
-    }
+    screenDimensions.value = dimensions
   }
 
   private fun Comment.allCollapsibleCommentIds(): Set<Comment.Id> {
@@ -247,7 +259,7 @@ class StoryDetailsViewModel(
             textLines = comment.text.htmlWrapped(maxWidth = (maxWidth - indent * INDENT_WIDTH).coerceAtMost(MAX_COMMENT_WIDTH)),
             isCollapsed = isCollapsed,
             childCount = comment.comments.size,
-            isViewed = false,
+            isViewed = false, // This will be updated later in the flow
           ),
         )
         if (!isCollapsed) {
@@ -262,59 +274,34 @@ class StoryDetailsViewModel(
     }
   }
 
-  private fun Story.WithComments.totalCommentCount(): Int {
-    var count = 0
-    fun countComments(comments: List<Comment>) {
-      for (comment in comments) {
-        count++
-        countComments(comment.comments)
-      }
-    }
-    countComments(comments)
-    return count
-  }
-
-
   fun onUpKeyPressed() {
-    val state = internalState.value as? InternalState.Content ?: return
-    val focusedCommentId = state.focusedCommentId ?: return
-    val focusedCommentIndex = state.uiComments.indexOfFirst { it.id == focusedCommentId }
+    if (storyLoadingState.value !is StoryLoadingState.Content) return
+    val focusedCommentId = focusedCommentId.value ?: return
+    val uiComments = uiComments.value
+    val focusedCommentIndex = uiComments.indexOfFirst { it.id == focusedCommentId }
     if (focusedCommentIndex <= 0) return
-    val newFocusedCommentId = state.uiComments[focusedCommentIndex - 1].id
-    val newScroll = adjustScroll(state, newFocusedCommentId)
-    internalState.value = state.copy(
-      uiComments = state.story.toUiComments(
-        maxWidth = state.screenDimensions.width,
-        collapsedCommentIds = state.collapsedCommentIds,
-      ),
-      focusedCommentId = newFocusedCommentId,
-      scroll = newScroll,
-    )
+    val newFocusedCommentId = uiComments[focusedCommentIndex - 1].id
+    this.focusedCommentId.value = newFocusedCommentId
+    scroll.value = adjustScroll(newFocusedCommentId)
     markCommentAsViewed(newFocusedCommentId)
   }
 
   fun onDownKeyPressed() {
-    val state = internalState.value as? InternalState.Content ?: return
-    val focusedCommentId = state.focusedCommentId ?: return
-    val focusedCommentIndex = state.uiComments.indexOfFirst { it.id == focusedCommentId }
-    if (focusedCommentIndex >= state.uiComments.lastIndex) return
-    val newFocusedCommentId = state.uiComments[focusedCommentIndex + 1].id
-    val newScroll = adjustScroll(state, newFocusedCommentId)
-    internalState.value = state.copy(
-      uiComments = state.story.toUiComments(
-        maxWidth = state.screenDimensions.width,
-        collapsedCommentIds = state.collapsedCommentIds,
-      ),
-      focusedCommentId = newFocusedCommentId,
-      scroll = newScroll,
-    )
+    if (storyLoadingState.value !is StoryLoadingState.Content) return
+    val focusedCommentId = focusedCommentId.value ?: return
+    val uiComments = uiComments.value
+    val focusedCommentIndex = uiComments.indexOfFirst { it.id == focusedCommentId }
+    if (focusedCommentIndex >= uiComments.lastIndex) return
+    val newFocusedCommentId = uiComments[focusedCommentIndex + 1].id
+    this.focusedCommentId.value = newFocusedCommentId
+    scroll.value = adjustScroll(newFocusedCommentId)
     markCommentAsViewed(newFocusedCommentId)
   }
 
   fun onRightKeyPressed() {
-    val state = internalState.value as? InternalState.Content ?: return
-    val focusedCommentId = state.focusedCommentId ?: return
-    val isCollapsed = focusedCommentId in state.collapsedCommentIds
+    if (storyLoadingState.value !is StoryLoadingState.Content) return
+    val focusedCommentId = focusedCommentId.value ?: return
+    val isCollapsed = focusedCommentId in collapsedCommentIds.value
     if (isCollapsed) {
       collapseOrExpandFocusedComment()
       return
@@ -323,9 +310,9 @@ class StoryDetailsViewModel(
   }
 
   fun onLeftKeyPressed() {
-    val state = internalState.value as? InternalState.Content ?: return
-    val focusedCommentId = state.focusedCommentId ?: return
-    val isCollapsed = focusedCommentId in state.collapsedCommentIds
+    val state = storyLoadingState.value as? StoryLoadingState.Content ?: return
+    val focusedCommentId = focusedCommentId.value ?: return
+    val isCollapsed = focusedCommentId in collapsedCommentIds.value
     val focusedComment = state.commentsById[focusedCommentId]!!
     if (!isCollapsed && focusedComment.comments.isNotEmpty()) {
       collapseOrExpandFocusedComment()
@@ -336,63 +323,49 @@ class StoryDetailsViewModel(
       onUpKeyPressed()
       return
     }
-    val newScroll = adjustScroll(state, parentCommentId)
-    internalState.value = state.copy(
-      uiComments = state.story.toUiComments(
-        maxWidth = state.screenDimensions.width,
-        collapsedCommentIds = state.collapsedCommentIds,
-      ),
-      focusedCommentId = parentCommentId,
-      scroll = newScroll,
-    )
+    this.focusedCommentId.value = parentCommentId
+    scroll.value = adjustScroll(parentCommentId)
     markCommentAsViewed(parentCommentId)
   }
 
   private fun collapseOrExpandFocusedComment() {
-    val state = internalState.value as? InternalState.Content ?: return
-    val focusedCommentId = state.focusedCommentId ?: return
-    val isCollapsed = focusedCommentId in state.collapsedCommentIds
-    val newCollapsedCommentIds = if (isCollapsed) {
-      state.collapsedCommentIds - focusedCommentId
+    val state = storyLoadingState.value as? StoryLoadingState.Content ?: return
+    val focusedCommentId = focusedCommentId.value ?: return
+    val isCollapsed = focusedCommentId in collapsedCommentIds.value
+    collapsedCommentIds.value = if (isCollapsed) {
+      collapsedCommentIds.value - focusedCommentId
     } else {
       val focusedComment = state.commentsById[focusedCommentId]!!
       if (focusedComment.comments.isEmpty()) return
-      state.collapsedCommentIds + focusedComment.allCollapsibleCommentIds()
+      collapsedCommentIds.value + focusedComment.allCollapsibleCommentIds()
     }
-    internalState.value = state.copy(
-      uiComments = state.story.toUiComments(
-        maxWidth = state.screenDimensions.width,
-        collapsedCommentIds = newCollapsedCommentIds,
-      ),
-      collapsedCommentIds = newCollapsedCommentIds,
-      scroll = adjustScroll(state, focusedCommentId),
-    )
+    scroll.value = adjustScroll(focusedCommentId)
   }
 
-  private fun adjustScroll(
-    state: InternalState.Content,
-    newFocusedCommentId: Comment.Id?,
-  ): Int {
+  private fun adjustScroll(newFocusedCommentId: Comment.Id?): Int {
     if (newFocusedCommentId == null) return 0
-    if (newFocusedCommentId == state.uiComments.first().id) {
+    val uiComments = uiComments.value
+    val uiStory = uiStory.value ?: return 0
+    val screenHeight = screenDimensions.value?.height ?: return 0
+    if (newFocusedCommentId == uiComments.first().id) {
       // If the new focused comment is the first one, scroll to the top
       return 0
     }
     var totalHeightUntilFocusedCommentExcluded =
-      1 + state.uiStory.titleLines.size + state.uiStory.urlLines.size + state.uiStory.textLines.size + 1
+      1 + uiStory.titleLines.size + uiStory.urlLines.size + uiStory.textLines.size + 1
     var totalHeightUntilFocusedCommentIncluded = totalHeightUntilFocusedCommentExcluded
-    for (comment in state.uiComments) {
+    for (comment in uiComments) {
       totalHeightUntilFocusedCommentIncluded += 1 + comment.textLines.size + 1
       if (comment.id == newFocusedCommentId) break
       totalHeightUntilFocusedCommentExcluded += 1 + comment.textLines.size + 1
     }
-    val scroll = state.scroll
-    return if (totalHeightUntilFocusedCommentExcluded - SCROLL_ADDITIONAL_MARGIN < scroll) {
-      (totalHeightUntilFocusedCommentExcluded - SCROLL_ADDITIONAL_MARGIN).coerceAtLeast(0)
+    val scroll = scroll.value
+    val additionalMargin = (screenHeight * SCROLL_ADDITIONAL_MARGIN_FACTOR).toInt()
+    return if (totalHeightUntilFocusedCommentExcluded - additionalMargin < scroll) {
+      (totalHeightUntilFocusedCommentExcluded - additionalMargin).coerceAtLeast(0)
     } else {
-      val screenHeight = state.screenDimensions.height
-      if (totalHeightUntilFocusedCommentIncluded - scroll + SCROLL_ADDITIONAL_MARGIN > screenHeight) {
-        (totalHeightUntilFocusedCommentIncluded - screenHeight + SCROLL_ADDITIONAL_MARGIN)
+      if (totalHeightUntilFocusedCommentIncluded - scroll + additionalMargin > screenHeight) {
+        (totalHeightUntilFocusedCommentIncluded - screenHeight + additionalMargin)
       } else {
         scroll
       }

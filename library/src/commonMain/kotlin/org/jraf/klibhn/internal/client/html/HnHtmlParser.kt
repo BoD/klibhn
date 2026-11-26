@@ -143,6 +143,7 @@ internal class HnHtmlParser {
       text = text,
       url = url,
       comments = comments,
+      commentCount = commentsWithIndents.size,
     )
   }
 
