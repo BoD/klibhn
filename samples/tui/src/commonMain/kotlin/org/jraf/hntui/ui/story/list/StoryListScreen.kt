@@ -31,6 +31,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jakewharton.mosaic.layout.fillMaxSize
+import com.jakewharton.mosaic.layout.fillMaxWidth
 import com.jakewharton.mosaic.layout.onKeyEvent
 import com.jakewharton.mosaic.modifier.Modifier
 import com.jakewharton.mosaic.text.SpanStyle
@@ -44,6 +45,7 @@ import org.jraf.hntui.data.hnapi.HnApiRepository
 import org.jraf.hntui.data.storage.db.StorageRepository
 import org.jraf.hntui.ui.components.Error
 import org.jraf.hntui.ui.components.Loading
+import org.jraf.hntui.ui.components.StatusBar
 import org.jraf.hntui.ui.story.list.StoryListViewModel.UiState
 import org.jraf.hntui.ui.theme.Colors
 import org.jraf.hntui.util.Keyboard
@@ -64,37 +66,41 @@ fun StoryListScreen(
       storageRepository = storageRepository,
     )
   }
-  WithConstraints(modifier = Modifier.fillMaxSize()) { constraints ->
-    val availableHeight = constraints.maxHeight
-    val availableWidth = constraints.maxWidth
-    LaunchedEffect(availableHeight) {
-      viewModel.setScreenHeight(availableHeight)
+  Column(Modifier.fillMaxSize()) {
+    WithConstraints(Modifier.fillMaxWidth().weight(1f)) { constraints ->
+      val availableHeight = constraints.maxHeight
+      val availableWidth = constraints.maxWidth
+      LaunchedEffect(availableHeight) {
+        viewModel.setScreenHeight(availableHeight)
+      }
+
+      val uiState by viewModel.uiState.collectAsState()
+      when (val uiState = uiState) {
+        UiState.Loading -> {
+          Loading()
+        }
+
+        is UiState.Error -> {
+          Error(uiState.throwable)
+        }
+
+        is UiState.Content -> {
+          StoryList(
+            content = uiState,
+            onUpKeyPressed = viewModel::onUpKeyPressed,
+            onDownKeyPressed = viewModel::onDownKeyPressed,
+            onSelectStory = { storyId ->
+              viewModel.markStoryAsViewed(storyId)
+              onSelectStory(storyId)
+            },
+            availableHeight = availableHeight,
+            availableWidth = availableWidth,
+          )
+        }
+      }
     }
 
-    val uiState by viewModel.uiState.collectAsState()
-    when (val uiState = uiState) {
-      UiState.Loading -> {
-        Loading()
-      }
-
-      is UiState.Error -> {
-        Error(uiState.throwable)
-      }
-
-      is UiState.Content -> {
-        StoryList(
-          content = uiState,
-          onUpKeyPressed = viewModel::onUpKeyPressed,
-          onDownKeyPressed = viewModel::onDownKeyPressed,
-          onSelectStory = { storyId ->
-            viewModel.markStoryAsViewed(storyId)
-            onSelectStory(storyId)
-          },
-          availableHeight = availableHeight,
-          availableWidth = availableWidth,
-        )
-      }
-    }
+    StatusBar("[↑/↓] Navigate  [Enter] Open  [q/Esc] Quit")
   }
 }
 
@@ -152,7 +158,6 @@ private fun StoryList(
             ),
           ) {
             append(title)
-            val unread = "*"
             append(" ")
             withStyle(
               SpanStyle(

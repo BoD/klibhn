@@ -1,5 +1,5 @@
-
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
@@ -10,6 +10,10 @@ plugins {
 
 kotlin {
   jvm {
+    compilerOptions {
+      jvmTarget.set(JvmTarget.JVM_17)
+    }
+
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     binaries {
       executable {

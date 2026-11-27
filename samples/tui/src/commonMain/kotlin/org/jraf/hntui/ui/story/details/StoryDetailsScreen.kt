@@ -31,6 +31,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jakewharton.mosaic.layout.fillMaxSize
+import com.jakewharton.mosaic.layout.fillMaxWidth
 import com.jakewharton.mosaic.layout.onKeyEvent
 import com.jakewharton.mosaic.modifier.Modifier
 import com.jakewharton.mosaic.text.AnnotatedString
@@ -47,6 +48,7 @@ import org.jraf.hntui.data.hnapi.HnApiRepository
 import org.jraf.hntui.data.storage.db.StorageRepository
 import org.jraf.hntui.ui.components.Error
 import org.jraf.hntui.ui.components.Loading
+import org.jraf.hntui.ui.components.StatusBar
 import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.Companion.INDENT_WIDTH
 import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.UiState
 import org.jraf.hntui.ui.story.details.StoryDetailsViewModel.UiState.Content.UiComment
@@ -69,61 +71,65 @@ fun StoryDetailsScreen(
   val viewModel = viewModel(key = "StoryDetailsViewModel:$storyId") {
     StoryDetailsViewModel(hnApiRepository = hnApiRepository, storageRepository = storageRepository, storyId = storyId)
   }
-  WithConstraints(modifier = Modifier.fillMaxSize()) { constraints ->
-    val availableHeight = constraints.maxHeight
-    val availableWidth = constraints.maxWidth
-    LaunchedEffect(constraints) {
-      viewModel.setScreenDimensions(Dimensions(availableWidth, availableHeight))
-    }
-    Box(
-      modifier = Modifier
-        .fillMaxSize()
-        .onKeyEvent { keyEvent ->
-          when (keyEvent) {
-            Keyboard.Escape -> {
-              onGoBackToStoryList()
-            }
+  Column(Modifier.fillMaxSize()) {
+    WithConstraints(Modifier.fillMaxWidth().weight(1f)) { constraints ->
+      val availableHeight = constraints.maxHeight
+      val availableWidth = constraints.maxWidth
+      LaunchedEffect(constraints) {
+        viewModel.setScreenDimensions(Dimensions(availableWidth, availableHeight))
+      }
+      Box(
+        modifier = Modifier
+          .fillMaxSize()
+          .onKeyEvent { keyEvent ->
+            when (keyEvent) {
+              Keyboard.Escape -> {
+                onGoBackToStoryList()
+              }
 
-            Keyboard.ArrowUp -> {
-              viewModel.onUpKeyPressed()
-            }
+              Keyboard.ArrowUp -> {
+                viewModel.onUpKeyPressed()
+              }
 
-            Keyboard.ArrowDown -> {
-              viewModel.onDownKeyPressed()
-            }
+              Keyboard.ArrowDown -> {
+                viewModel.onDownKeyPressed()
+              }
 
-            Keyboard.ArrowLeft -> {
-              viewModel.onLeftKeyPressed()
-            }
+              Keyboard.ArrowLeft -> {
+                viewModel.onLeftKeyPressed()
+              }
 
-            Keyboard.ArrowRight -> {
-              viewModel.onRightKeyPressed()
-            }
+              Keyboard.ArrowRight -> {
+                viewModel.onRightKeyPressed()
+              }
 
-            else -> return@onKeyEvent false
+              else -> return@onKeyEvent false
+            }
+            true
+          },
+      ) {
+        val uiState by viewModel.uiState.collectAsState()
+        when (val uiState = uiState) {
+          UiState.Loading -> {
+            Loading()
           }
-          true
-        },
-    ) {
-      val uiState by viewModel.uiState.collectAsState()
-      when (val uiState = uiState) {
-        UiState.Loading -> {
-          Loading()
-        }
 
-        is UiState.Error -> {
-          Error(uiState.throwable)
-        }
+          is UiState.Error -> {
+            Error(uiState.throwable)
+          }
 
-        is UiState.Content -> {
-          Story(
-            content = uiState,
-            availableWidth = availableWidth,
-            availableHeight = availableHeight,
-          )
+          is UiState.Content -> {
+            Story(
+              content = uiState,
+              availableWidth = availableWidth,
+              availableHeight = availableHeight,
+            )
+          }
         }
       }
     }
+
+    StatusBar("[↑/↓] Navigate  [←/→] Expand/Collapse  [Esc] Back  [q] Quit")
   }
 }
 
